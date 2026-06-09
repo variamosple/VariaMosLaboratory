@@ -1,0 +1,78 @@
+{
+  "homepage": "/variamos_laboratory/",
+  "name": "variamos-laboratory",
+  "jest": {
+    "coverageThreshold": {
+      "global": {
+        "branches": 1,
+        "functions": 1,
+        "lines": 1,
+        "statements": 1
+      }
+    }
+  },
+  "engines": {
+    "node": ">=16.18.1"
+  },
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@variamosple/variamos-components": "^0.0.23",
+    "alertifyjs": "^1.13.1",
+    "axios": "^0.21.1",
+    "buffer": "^6.0.3",
+    "gapi-script": "^1.2.0",
+    "immer": "^9.0.12",
+    "mxgraph": "^4.2.2",
+    "prism-themes": "^1.9.0",
+    "prismjs": "^1.29.0",
+    "react": "^18.3.1",
+    "react-bootstrap": "^2.8.0",
+    "react-bootstrap-icons": "1.11",
+    "react-color": "^2.19.3",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.55.0",
+    "react-icons": "5.4",
+    "react-router-dom": "^6.29.0",
+    "react-scripts": "^5.0.1",
+    "react-select": "^5.7.4",
+    "react-simple-code-editor": "^0.13.1",
+    "typescript": "^4.2.3",
+    "variamos-laboratory": "file:"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "dev": "set PORT=3003 && react-scripts start",
+    "build": "CI=false && react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "docker:clear": "docker stop variamos-laboratory; docker rm variamos-laboratory; docker rmi variamos-laboratory:latest;",
+    "docker:build": "docker build -t variamos-laboratory:latest .",
+    "docker:ci": "yarn docker:build && yarn docker:clear",
+    "docker:deploy": "yarn docker:build && docker run -d --name variamos-laboratory -p 3000:3000 variamos-laboratory:latest"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.19.41",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17"
+  }
+}

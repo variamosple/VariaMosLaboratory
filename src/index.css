@@ -1,0 +1,39 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0px;
+  padding: 0px;
+}
+
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+.alertify-notifier .ajs-message.ajs-info {
+  background: #cff4fc !important;
+  color: #055160 !important;
+  border-color: #9eeaf9 !important;
+}
+
+.alertify-notifier .ajs-message.ajs-error {
+  background: #f8d7da !important;
+  color: #58151c !important;
+  border-color: #f1aeb5 !important;
+}
+
+.alertify-notifier .ajs-message.ajs-success {
+  background: #d1e7dd !important;
+  color: #0a3622 !important;
+  border-color: #a3cfbb !important;
+}
+
+.copyright {
+  text-align: center;
+  color: #c0c0c0 !important;
+}
