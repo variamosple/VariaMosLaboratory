@@ -9,7 +9,7 @@ export class Experiment {
     version: number;
     createdAt: Date;
     updatedAt: Date;
-    metrics: Metric[];
+    metrics?: Metric[];
     customMetrics?: Metric[];
     labels?: string[];
     status?: "draft" | "ready" | "archived" | "deleted" | "running" | "completed" | "failed";
@@ -19,8 +19,8 @@ export class Experiment {
         description: string, 
         hypothesis: string, 
         scenarios: Scenario[] = [], 
-        metrics: Metric[] = [], 
         userId: string, 
+        metrics?: Metric[], 
         customMetrics?: Metric[], 
         labels?: string[]
     ) {
