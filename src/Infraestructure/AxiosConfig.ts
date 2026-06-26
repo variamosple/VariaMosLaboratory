@@ -24,6 +24,7 @@ export const LABORATORY_CLIENT = axios.create({
   withCredentials: true,
 });
 
+LABORATORY_CLIENT.interceptors.request.use(authInterceptor);
 
 export const PROJECTS_CLIENT = axios.create({
   baseURL: Config.SERVICES.urlBackEndProjectPersistence,
@@ -31,4 +32,12 @@ export const PROJECTS_CLIENT = axios.create({
   withCredentials: true,
 });
 
-LABORATORY_CLIENT.interceptors.request.use(authInterceptor);
+PROJECTS_CLIENT.interceptors.request.use(authInterceptor);
+
+export const LANGUAGES_CLIENT = axios.create({
+  baseURL: Config.SERVICES.urlBackEndLanguage,
+  timeout: 30000,
+  withCredentials: true,
+});
+
+LANGUAGES_CLIENT.interceptors.request.use(authInterceptor);
