@@ -5,7 +5,7 @@ import CancelButton from "../../../../Buttons/CancelButton/CancelButton";
 import MetricCard from "./MetricCard/MetricCard";
 import "./SelectMetricModal.css";
 import CreateMetricForm from "./CreateMetricForm/CreateMetricForm";
-import ConfirmationModal from "../../../../ConfirmationModal";
+import ConfirmationModal from "../../../../ConfirmationModal/ConfirmationModal";
 
 interface SelectMetricModalProps {
     show: boolean;

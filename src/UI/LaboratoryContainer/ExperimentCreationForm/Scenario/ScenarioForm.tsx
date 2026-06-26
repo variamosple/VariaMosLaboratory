@@ -2,7 +2,7 @@ import { Tab, Nav } from "react-bootstrap";
 import { Scenario } from "../../../../Domain/Laboratory/Entities/Scenario";
 import { useState } from "react";
 import ScenarioTabContent from "./ScenarioTabContent";
-import ConfirmationModal from "../../../ConfirmationModal";
+import ConfirmationModal from "../../../ConfirmationModal/ConfirmationModal";
 import "./ScenarioForm.css";
 
 type ScenarioFormProps = {
