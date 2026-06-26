@@ -3,24 +3,27 @@ import {
   Header,
   MenuContextProvider,
 } from "@variamosple/variamos-components";
-
 import VariaMosLogo from "../../../Addons/images/VariaMosLogo.png";
 import { requestMenuConfig } from "../../../DataProvider/Services/configService";
-import { AppConfig } from "../../../Infraestructure/AppConfig";
+
+
+import { Config } from "../../../Config";
 
 function Layout({ children }) {
   return (
-    <>
+    <div className="d-flex flex-column vh-100">
       <MenuContextProvider requestMenu={requestMenuConfig}>
         <Header
           logoUrl={VariaMosLogo}
           logoAlt="VariaMos logo"
-          signInUrl={AppConfig.LOGIN_URL}
+          signInUrl={Config.LOGIN_URL}
         />
       </MenuContextProvider>
-      <div>{children}</div>
-      <Footer version={AppConfig.VERSION} />
-    </>
+
+      <div className="bodyContent flex-grow-1 ">{children}</div>
+
+      <Footer />
+    </div>
   );
 }
 

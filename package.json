@@ -21,6 +21,7 @@
     "alertifyjs": "^1.13.1",
     "axios": "^0.21.1",
     "buffer": "^6.0.3",
+    "date-fns": "^4.4.0",
     "gapi-script": "^1.2.0",
     "immer": "^9.0.12",
     "mxgraph": "^4.2.2",
@@ -43,7 +44,7 @@
   "scripts": {
     "start": "react-scripts start",
     "dev": "set PORT=3003 && react-scripts start",
-    "build": "CI=false && react-scripts build",
+    "build": "set CI=false&& react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "docker:clear": "docker stop variamos-laboratory; docker rm variamos-laboratory; docker rmi variamos-laboratory:latest;",

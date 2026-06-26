@@ -6,6 +6,14 @@ body,
   padding: 0;
 }
 
+:root {
+  --primary-color: #428DCF;
+  --primary-color-text: #ffffff;
+  --primary-color-constrast: #0f436d;
+  --primary-color-constrast-text: #ffffff;
+  --secondary-color: #564e64;
+}
+
 body {
   margin: 0px;
   padding: 0px;
