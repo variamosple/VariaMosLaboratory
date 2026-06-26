@@ -3,34 +3,51 @@ import ButtonProps from "../Button.type";
 import "./SelectButton.css";
 import "../../../index.css";
 
+type SelectableItem = {
+    name: string;
+};
+
 interface SelectButtonProps extends ButtonProps {
-    content?: any[];
+    content?: SelectableItem[];
+    label: string;
 }
 
 const MAX_VISIBLE_ITEMS = 5;
 
-export default function SelectButton({onClick, label,content = []}: SelectButtonProps) {
-    const visibleItems = content.slice(0, MAX_VISIBLE_ITEMS);
-    const remainingCount = content.length - MAX_VISIBLE_ITEMS;
+export default function SelectButton({
+    onClick,
+    label,
+    content = [],
+}: SelectButtonProps) {
+    const safeContent = content.filter(
+        (item): item is SelectableItem => item != null && typeof item.name === "string"
+    );
+
+    const visibleItems = safeContent.slice(0, MAX_VISIBLE_ITEMS);
+    const remainingCount = safeContent.length - MAX_VISIBLE_ITEMS;
 
     return (
         <Button
             className="btn-select w-100 py-3 text-center"
             onClick={onClick}
         >
-            <div className="select-button-label">{label || "Select"}</div>
+            <div className="select-button-label">
+                {label}
+            </div>
 
-            {content.length > 0 && (
+            {safeContent.length > 0 && (
                 <div className="small text-muted mt-1">
                     {visibleItems.map((item, index) => (
                         <span key={index}>
-                            {item.name ?? String(item)}
+                            {item.name}
                             {index < visibleItems.length - 1 && ", "}
                         </span>
                     ))}
 
                     {remainingCount > 0 && (
-                        <span className="more">{` +${remainingCount} more`}</span>
+                        <span className="more">
+                            {` +${remainingCount} more`}
+                        </span>
                     )}
                 </div>
             )}
