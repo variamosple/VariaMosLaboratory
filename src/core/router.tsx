@@ -1,8 +1,8 @@
 import { Navigate, RouteObject } from "react-router-dom";
-import { AppConfig } from "../Infraestructure/AppConfig";
 
 import { AuthWrapper } from "@variamosple/variamos-components";
-import ExperimentPage from "../UI/WorkSpace/DashBoard";
+import { Config } from "../Config";
+import LaboratoryContainer from "../UI/LaboratoryContainer/LaboratoryContainer";
 
 export const ROUTES: RouteObject[] = [
   {
@@ -11,8 +11,8 @@ export const ROUTES: RouteObject[] = [
       {
         index: true,
         element: (
-          <AuthWrapper redirectPath={AppConfig.LOGIN_URL}>
-            <ExperimentPage />
+          <AuthWrapper redirectPath={Config.LOGIN_URL}>
+            <LaboratoryContainer />
           </AuthWrapper>
         ),
       },
