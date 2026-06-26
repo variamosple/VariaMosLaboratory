@@ -1,0 +1,86 @@
+.experiments-table {
+  min-width: 1000px;
+}
+
+.experiments-table th,
+.experiments-table td {
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.status-column {
+  width: 8%;
+}
+
+.name-column {
+  width: 15%;
+}
+
+.description-column {
+  width: 22%;
+}
+
+.hypothesis-column {
+  width: 22%;
+}
+
+.labels-column {
+  width: 13%;
+}
+
+.owner-column {
+  width: 10%;
+}
+
+.actions-column {
+  width: 180px;
+  min-width: 180px;
+}
+
+.clamped-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.actions-container {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.actions-container .btn {
+  width: 36px;
+  height: 36px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 36px;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.actions-container .btn svg {
+  width: 50%;
+  height: 50%;
+}
+
+.selected-row {
+  background-color: #dbeafe;
+  border: 2px solid #2563eb !important;
+}
+
+.selected-row:hover {
+  background-color: #bfdbfe;
+}
