@@ -1,0 +1,25 @@
+
+
+.card {
+    border: none;
+}
+
+.nav-tabs .nav-link {
+    color: var(--primary-color);
+}
+.form-check-label,
+.form-check-input {
+    cursor: pointer;
+}
+
+.form-check-label {
+    color: var(--secondary-color);
+}
+
+.variable-selection-grid {
+    display: grid;
+    grid-template-columns: max-content max-content;
+    justify-content: center;
+    column-gap: 12rem;
+    row-gap: 0.75rem;
+}
