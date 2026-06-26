@@ -1,0 +1,29 @@
+@import url("../../../index.css");
+
+.btn-select {
+    border-color: var(--primary-color);
+    color: var(--primary-color-constrast);
+    border-style: dashed;
+    background-color: transparent;
+}
+
+.btn-select:hover .select-button-label,
+.btn-select:focus .select-button-label,
+.btn-select:active .select-button-label {
+    text-decoration: underline;
+}
+
+.btn-select:hover,
+.btn-select:focus,
+.btn-select:active,
+.btn-select:focus:active {
+    background-color: #ffffff;
+    color: var(--primary-color-constrast);
+    border-color: var(--primary-color-constrast);
+    box-shadow: none;
+}
+
+.more {
+    color: var(--primary-color);
+    font-weight: bold;
+}
