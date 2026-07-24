@@ -4,3 +4,10 @@ export enum ExperimentRoleEnum {
     EDITOR = "editor",
     VIEWER = "viewer",
 }
+
+export type Collaborator = {
+  id: string;
+  name: string;
+  email: string;
+  role: ExperimentRoleEnum;
+};
