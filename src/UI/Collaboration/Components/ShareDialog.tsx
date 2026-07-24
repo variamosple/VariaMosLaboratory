@@ -1,7 +1,7 @@
 import { Modal, Dropdown, Form, FormGroup } from 'react-bootstrap';
-import { ExperimentRoleEnum } from '../../Domain/Laboratory/Entities/Collaborator';
+import { ExperimentRoleEnum } from '../../../Domain/Laboratory/Entities/Collaborator';
 import { useState } from 'react';
-import { Experiment } from '../../Domain/Laboratory/Entities/Experiment';
+import { Experiment } from '../../../Domain/Laboratory/Entities/Experiment';
 
 type ShareDialogProps = {
     show: boolean;
@@ -15,9 +15,7 @@ export default function ShareDialog({ show, onHide, experiment, onShareExperimen
     const [shareRole, setShareRole] = useState(ExperimentRoleEnum.VIEWER);
 
     const handleInviteCollaborator = () => {
-        // Implement the logic to invite a collaborator using shareInput and shareRole
         onShareExperiment(experiment, shareInput, shareRole);
-        alert(`coming soon: Invite ${shareInput} as ${shareRole}`);
         setShareInput('');
         setShareRole(ExperimentRoleEnum.VIEWER);
         onHide();
