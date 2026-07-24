@@ -1,110 +1,219 @@
-import { Experiment } from "@domain/Laboratory/Entities/Experiment";
-import { Button, Tabs, Tab } from "react-bootstrap";
-import { ArrowLeft, ClockHistory, Hourglass, GraphUp, FileEarmarkArrowUp } from "react-bootstrap-icons";
+import { Experiment, ExperimentDetailed } from "@domain/Laboratory/Entities/Experiment";
 import "./ExperimentContainer.css";
-import { useEffect, useMemo, useState } from "react";
-import { getExperiment, getExperimentAuthor } from "../../../DataProvider/Services/experimentService";
-import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
-import MxGEditor from "../../MxGEditor/MxGEditor";
+import { useEffect, useState, useCallback } from "react";
+import { getExperimentDetailed, publishAsBenchmark, publishAsTemplate, getExperimentHistory, restoreExperimentVersion } from "../../../DataProvider/Services/experimentService";
+import ExperimentHeader from "./ExperimentHeader/ExperimentHeader";
+import ScenarioTabs from "./ScenarioTabs/ScenarioTabs";
+import ExperimentSidebar from "./ExperimentSidebar/ExperimentSidebar";
+import ExperimentCreationContainer from "../ExperimentCreationForm/ExperimentCreationForm";
+import Modal from "react-bootstrap/Modal";
+import { Button, } from "react-bootstrap";
+import VersionHistoryModal from "./versionHistoryModal/versionHistoryModal";
+import { ExperimentHistory } from "@domain/Laboratory/Entities/ExperimentHistory";
+import CollaborationPanel from "../../Collaboration/Components/CollaborationPanel";
+import { ExperimentRoleEnum } from "../../../Domain/Laboratory/Entities/Collaborator";
+
 type ExperimentContainerProps = {
     experiment: Experiment;
     setExperiment: React.Dispatch<React.SetStateAction<Experiment>>;
+    mode: "allowed" | "restricted";
 }
 
-export default function ExperimentsContainer({experiment, setExperiment}: ExperimentContainerProps) {
-    const [activeTab, setActiveTab] = useState(experiment.scenarios[0]?.id);
-    const [author, setAuthor] = useState<string>("");
-    const [model, setModel] = useState(experiment.scenarios[0]?.model || null);
-    console.log("Model in experiment:", experiment.scenarios.flatMap(s => s.model));
-    useEffect(() => {
-        async function loadAuthor() {
-            const result = await getExperimentAuthor(experiment.id);
-            setAuthor(result);
-        }
+export default function ExperimentContainer({experiment, setExperiment, mode}: ExperimentContainerProps) {
+    const [detailedExperiment, setDetailedExperiment] = useState<ExperimentDetailed | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [showPublishModal, setShowPublishModal] = useState(false);
+    const [currentMode, setMode] = useState<"allowed" | "restricted">(mode);
+    const [showVersionHistory, setShowVersionHistory] = useState(false);
+    const [versionHistory, setVersionHistory] = useState<ExperimentHistory[]>([]);
 
-        loadAuthor();
-    }, [experiment.id]);
-    
-    function formatTimeAgo(date: Date) {
-        return formatDistanceToNow(date, { addSuffix: true });
+    const loadExperiment = useCallback(async (id: string) => {
+        const result = await getExperimentDetailed(id);
+        setDetailedExperiment(result);
+        setExperiment(result);
+    }, [setExperiment]);
+
+    useEffect(() => {
+        loadExperiment(experiment.id);
+    }, [experiment.id, loadExperiment]);
+
+    const handleRestore = async (entry: ExperimentHistory) => {
+        await restoreExperimentVersion(
+            experiment.id,
+            entry.experimentVersion
+        );
+
+        await loadExperiment(experiment.id);
+
+        const history = await getExperimentHistory(experiment.id);
+        setVersionHistory(history);
+
+        setShowVersionHistory(false);
+    }
+
+    useEffect(() => {
+        if (showVersionHistory) {
+            async function loadVersionHistory() {
+                try {
+                    const history = await getExperimentHistory(experiment.id);
+                    setVersionHistory(history);
+                }
+                catch (error) {
+                    console.error("Error fetching version history:", error);
+                }
+            }
+            loadVersionHistory();
+        }
+    }, [showVersionHistory, experiment.id]);
+
+    const handleEditExperiment = () => {
+        setIsEditing(true);
+    }
+
+
+    const handlePublish = async (type: "template" | "benchmark") => {
+        try {
+            if (type === "template") {
+                await publishAsTemplate(experiment.id);
+            } else {
+                await publishAsBenchmark(experiment.id);
+            }
+
+            setShowPublishModal(false);
+            setMode("restricted");
+
+        } catch (error: any) {
+            console.error("Publish error:", error);
+
+            const message =
+                error.response?.data?.message ??
+                "An error occurred while publishing the experiment.";
+
+            alert(message);
+        }
+    };
+
+
+    if (!detailedExperiment) {
+        return (
+            <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (isEditing) {
+        return (
+            <ExperimentCreationContainer
+                mode="edit"
+                initialExperiment={detailedExperiment}
+                onSuccess={async (updatedExperiment) => {
+                    setExperiment(updatedExperiment);
+                    setIsEditing(false);
+
+                    const refreshed = await getExperimentDetailed(updatedExperiment.id);
+                    setDetailedExperiment(refreshed);
+                }}
+                onCancel={() => setIsEditing(false)}
+            />
+        );
     }
 
     return (
-        <div className="p-4">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <Button variant="primary" onClick={() => {setExperiment(null)}}>
-                    <ArrowLeft className="me-2" />
-                    Back
-                </Button>
-                <h3 className="mb-0">{experiment.name}</h3>
-                <div>
-                    <Button variant="outline-primary" className="me-2">
-                        <ClockHistory className="me-2" />
-                        Version History
-                    </Button>
-                    <Button variant="outline-primary">
-                        <Hourglass className="me-2" />
-                        Run History
-                    </Button>
-                    <Button variant="outline-primary" className="ms-2">
-                        <GraphUp className="me-2" />
-                        Dashboard
-                    </Button>
-                    <Button variant="outline-primary" className="ms-2">
-                        <FileEarmarkArrowUp className="me-2" />
-                        Publish as Template
-                    </Button>
+        <>
+            <div className="p-4">
+                <ExperimentHeader
+                    experiment={experiment}
+                    onBack={() => setExperiment(null)}
+                    mode={currentMode}
+                    onPublishTemplate={() =>setShowPublishModal(true)}
+                    onVersionHistory={() => setShowVersionHistory(true)}
+                />
+                <div className="d-flex gap-4">
+                    <ScenarioTabs
+                        scenarios={detailedExperiment.scenarios}
+                    />
+                    <ExperimentSidebar
+                        experiment={experiment}
+                        detailedExperiment={detailedExperiment}
+                        onEditExperiment={handleEditExperiment}
+                        mode={currentMode}
+                    />
                 </div>
+                { (experiment.userRole === ExperimentRoleEnum.OWNER || experiment.userRole === ExperimentRoleEnum.DIRECTOR) && (
+                    <CollaborationPanel experiment={detailedExperiment} />
+                )}
             </div>
-            <div className="d-flex gap-4">
-                <div className="experiment-content">
-                    <Tabs activeKey={activeTab} className="mb-3" onSelect={(k) => setActiveTab(k)}>
-                        {experiment.scenarios.map((scenario) => (
-                            <Tab
-                                key={scenario.id}
-                                eventKey={scenario.id}
-                                title={"Scenario " + (experiment.scenarios.indexOf(scenario) + 1)}
+            {showVersionHistory && (
+                <VersionHistoryModal
+                    show={showVersionHistory}
+                    onHide={() => setShowVersionHistory(false)}
+                    versionHistory={versionHistory}
+                    handleRestore={(entry) => { handleRestore(entry); setShowVersionHistory(false); }}
+                />
+            )}
+            {showPublishModal && (
+                <Modal show={showPublishModal} onHide={() => setShowPublishModal(false)}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Publish Experiment</Modal.Title>
+                    </Modal.Header>
+
+                    <Modal.Body>
+                        <p>
+                            Choose how you want to publish this experiment:
+                        </p>
+
+                        <div className="d-grid gap-3">
+                            <Button
+                                variant="outline-primary"
+                                size="lg"
+                                className="text-start p-3"
+                                onClick={() => handlePublish("template")}
                             >
-                            </Tab>
-                        ))}
-                    </Tabs>
-                    <div className="border rounded p-3 overflow-hidden">
-                        <MxGEditor model={model} />
-                    </div>
-                </div>
-                <div className="experiment-side mt-5">
-                    <div className="experiment-card mb-3">
-                        <h5 className="mb-5">Execution</h5>
-                        <Button variant="success" className="w-100 mb-2">Run Experiment</Button>
-                        <Button variant="outline-secondary" className="w-100">Schedule Experiment</Button>
-                    </div>
-                    <div className="experiment-card">
-                        <h5 className="mb-5">Details</h5>
-                        <div className="mb-3 d-flex flex-row justify-content-between">
-                            <p className="text-muted">State :</p>
-                            <p>{experiment.status.toUpperCase()}</p>
+                                <div>
+                                    <h5 className="mb-2">
+                                        Experiment Template
+                                    </h5>
+                                    <div className="small">
+                                        Publish this experiment as a reusable template.
+                                        Other users will be able to create new experiments
+                                        based on this structure.
+                                    </div>
+                                </div>
+                            </Button>
+
+                            <Button
+                                variant="outline-success"
+                                size="lg"
+                                className="text-start p-3"
+                                onClick={() => handlePublish("benchmark")}
+                            >
+                                <div>
+                                    <h5 className="mb-2">
+                                        Benchmark
+                                    </h5>
+                                    <div className="small">
+                                        Publish this experiment as a benchmark.
+                                        Other users will be able to execute their own
+                                        models using the same scenarios and metrics.
+                                    </div>
+                                </div>
+                            </Button>
                         </div>
-                        <div className="mb-3 d-flex flex-row justify-content-between">
-                            <p className="text-muted">Author :</p>
-                            <p>{author}</p>
-                        </div>
-                        <div className="mb-3 d-flex flex-row justify-content-between">
-                            <p className="text-muted">Created on :</p>
-                            <p>{new Date(experiment.createdAt).toLocaleDateString()}</p>
-                        </div>
-                        <div className="mb-3 d-flex flex-row justify-content-between">
-                            <p className="text-muted">Last modified :</p>
-                            <p>{formatTimeAgo(experiment.updatedAt)}</p>
-                        </div>
-                        <div className="border-top my-3"></div>
-                        <div className="mb-3 d-flex flex-row justify-content-between">
-                            <p className="text-muted">Metrics :</p>
-                            <p className="badge bg-primary">{}</p>
-                        </div>
-                        <Button variant="outline-primary" className="w-100">Edit Experiment</Button>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    </Modal.Body>
+
+                    <Modal.Footer>
+                        <Button
+                            variant="secondary"
+                            onClick={() => setShowPublishModal(false)}
+                        >
+                            Cancel
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+            )}
+        </>
     );
 }
