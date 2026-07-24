@@ -12,19 +12,28 @@ type ScenarioTabContentProps = {
 }
 
 export default function ScenarioTabContent({ scenario, updateScenario }: ScenarioTabContentProps) {    
-    const [model, setModel] = useState<Model | null>();
+    const [model, setModel] = useState<Model | null>(scenario.model ?? null);
+    const [, setModelId] = useState<string | null>(null);
     const [solverConfigs, setSolverConfigs] = useState<SolverConfigs>({});
     const [showSelectModelModal, setShowSelectModelModal] = useState(false);
+
+    const setSelectedModel = (model: Model) => {
+        setModel(model);
+        setModelId(model.id);
+
+        updateScenario({
+            ...scenario,
+            model,
+            modelId: model.id,
+        });
+    };
 
     useEffect(() => {
         updateScenario({
             ...scenario,
-            model,
-            solver_config: solverConfigs[scenario.id],
+            solverConfigs: solverConfigs,
         });
-        console.log("Model:", model);
-        console.log("Solver Configs:", solverConfigs);
-    }, [model, solverConfigs, scenario, updateScenario]);
+    }, [solverConfigs, scenario, updateScenario]);
 
     return (
         <>
@@ -44,7 +53,7 @@ export default function ScenarioTabContent({ scenario, updateScenario }: Scenari
             <SelectModelModal
                 show={showSelectModelModal}
                 onClose={() => {setShowSelectModelModal(false);}}
-                setSelectedModel={(model) => setModel(model)}
+                setSelectedModel={(model) => setSelectedModel(model)}
                 selectedModel={model}
             />
         </>

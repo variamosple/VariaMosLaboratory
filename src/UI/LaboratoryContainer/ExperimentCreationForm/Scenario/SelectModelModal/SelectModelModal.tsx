@@ -14,7 +14,7 @@ import CancelButton from "../../../../Buttons/CancelButton/CancelButton";
 type SelectModelModalProps = {
     show: boolean;
     onClose: () => void;
-    setSelectedModel: React.Dispatch<React.SetStateAction<Model | null>>;
+    setSelectedModel: (model: Model) => void;
     selectedModel: Model | null;
 };
 

@@ -1,4 +1,4 @@
-import {Tabs, Tab, Modal, Button, Spinner} from "react-bootstrap";
+import {Tabs, Tab, Modal, Button, Spinner, Alert} from "react-bootstrap";
 import { useEffect, useState } from "react";
 import CancelButton from "../../../Buttons/CancelButton/CancelButton";
 import { Experiment } from "../../../../Domain/Laboratory/Entities/Experiment";
@@ -100,7 +100,7 @@ export default function SelectTemplateModal({ show, onClose, onTemplateSelected 
                     </div>
                 ) : filteredTemplates.length === 0 ? (
                     <div className="text-center py-5">
-                        No templates found.
+                        <Alert variant="info">No templates found.</Alert>
                     </div>
                 ) : (
                     <ExperimentList

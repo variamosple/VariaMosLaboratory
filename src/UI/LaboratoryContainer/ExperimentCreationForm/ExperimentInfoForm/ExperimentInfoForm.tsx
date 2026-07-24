@@ -10,11 +10,10 @@ type ExperimentInfoFormProps = {
     experimentHypothesis: string;
     setExperimentHypothesis: React.Dispatch<React.SetStateAction<string>>;
     metrics: Metric[];
-    setMetrics: React.Dispatch<React.SetStateAction<Metric[]>>;
-    customMetrics: Metric[];
-    setCustomMetrics: React.Dispatch<React.SetStateAction<Metric[]>>;
-    labels: string[];
+    setMetrics: React.Dispatch<React.SetStateAction<Metric[]>>;    labels: string[];
     setLabels: React.Dispatch<React.SetStateAction<string[]>>;
+    nameError: boolean;
+    setNameError: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export default function ExperimentInfoForm({ 
@@ -26,10 +25,10 @@ export default function ExperimentInfoForm({
     setExperimentHypothesis,
     metrics,
     setMetrics,
-    customMetrics,
-    setCustomMetrics,
     labels,
-    setLabels
+    setLabels,
+    nameError,
+    setNameError
     }: ExperimentInfoFormProps) {
 
     const [showSelectMetricModal, setShowSelectMetricModal] = useState(false);
@@ -40,13 +39,22 @@ export default function ExperimentInfoForm({
                     <label className="form-label">Name</label>
                     <input
                         type="text"
-                        className="form-control"
+                        className={`form-control ${nameError ? "is-invalid" : ""}`}
                         placeholder="Name of the experiment"
                         value={experimentName}
-                        onChange={(e) =>
-                            setExperimentName(e.target.value)
-                        }
+                        onChange={(e) => {
+                            setExperimentName(e.target.value);
+                            if (e.target.value.trim()) {
+                                setNameError(false);
+                            }
+                        }}
                     />
+
+                    {nameError && (
+                        <div className="invalid-feedback">
+                            The experiment name is required.
+                        </div>
+                    )}
                 </div>
 
                 {/* Description */}
@@ -110,8 +118,6 @@ export default function ExperimentInfoForm({
                 onClose={() => {setShowSelectMetricModal(false);}}
                 setSelectedMetrics={(metrics) => setMetrics(metrics)}
                 selectedMetrics={metrics}
-                setSelectedCustomMetrics={(metrics) => setCustomMetrics(metrics)}
-                selectedCustomMetrics={customMetrics}
             />
         </>
     )

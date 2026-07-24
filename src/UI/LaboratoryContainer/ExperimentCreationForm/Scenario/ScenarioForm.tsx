@@ -26,7 +26,7 @@ export default function ScenarioForm({scenarios, setScenarios}: ScenarioFormProp
     };
 
     const askDeleteScenario = (scenario: Scenario) => {
-        const isNotEmpty = scenario.model !== null || scenario.solver_config !== null;
+        const isNotEmpty = scenario.model !== null || scenario.solverConfigs !== null;
 
         if (isNotEmpty) {
             setScenarioToDelete(scenario.id);

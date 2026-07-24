@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-import { Experiment } from "../../../Domain/Laboratory/Entities/Experiment";
-import { useSession } from "@variamosple/variamos-components/dist/Context/SessionContext";
+import { useState } from "react";
+import { Experiment, ExperimentDetailed } from "../../../Domain/Laboratory/Entities/Experiment";
 import "./ExperimentCreationForm.css";
 import CreateExperimentButton from "../../Buttons/CreateExperimentButton/CreateExperimentButton";
 import CancelButton from "../../Buttons/CancelButton/CancelButton";
@@ -9,44 +8,63 @@ import ExperimentInfoForm from "./ExperimentInfoForm/ExperimentInfoForm";
 import { Scenario } from "../../../Domain/Laboratory/Entities/Scenario";
 import ScenarioForm from "./Scenario/ScenarioForm";
 import SelectTemplateModal from "./SelectTemplateModal/SelectTemplateModal";
+import { createExperiment, updateExperiment } from "../../../DataProvider/Services/experimentService";
 import { Metric } from "@domain/Laboratory/Entities/Metric";
+import { ExperimentRoleEnum } from "../../../Domain/Laboratory/Entities/Collaborator";
 
 type ExperimentCreationFormProps = {
-    onExperimentCreated: (experiment: Experiment) => void;
+    mode: "create" | "edit";
+    initialExperiment?: ExperimentDetailed;
+    onSuccess: (experiment: Experiment) => void;
     onCancel: () => void;
 }
 
-export default function ExperimentCreationForm({ onExperimentCreated, onCancel }: ExperimentCreationFormProps) {
-    const { user } = useSession();
-
-    const [experimentName, setExperimentName] = useState("");
-    const [experimentDescription, setExperimentDescription] = useState("");
-    const [experimentHypothesis, setExperimentHypothesis] = useState("");
-    const [scenarios, setScenarios] = useState<Scenario[]>([new Scenario(crypto.randomUUID())]);
+export default function ExperimentCreationForm({ mode, initialExperiment, onSuccess, onCancel }: ExperimentCreationFormProps) {
+    console.log("Initial experiment:", initialExperiment);
+    const [experimentName, setExperimentName] = useState( initialExperiment?.name ?? "");
+    const [experimentDescription, setExperimentDescription] = useState( initialExperiment?.description ?? "");
+    const [experimentHypothesis, setExperimentHypothesis] = useState( initialExperiment?.hypothesis ?? "");
+    const [scenarios, setScenarios] = useState<Scenario[]>(initialExperiment?.scenarios ?? [new Scenario(crypto.randomUUID())]);
     const [isTemplateImporting, setIsTemplateImporting] = useState(false);
-    const [metrics, setMetrics] = useState<Metric[]>([]);
-    const [customMetrics, setCustomMetrics] = useState<Metric[]>([]);
-    const [labels, setLabels] = useState<string[]>([]);
-    const [userId, setUserId] = useState("");
+    const [metrics, setMetrics] = useState<Metric[]>(initialExperiment?.metrics ?? []);
+    const [labels, setLabels] = useState<string[]>(initialExperiment?.labels ?? []);;
+    const [nameError, setNameError] = useState(false);
 
-    useEffect(() => {
-        setUserId(user.id);
-    }, [user]);
+    const handleCreateExperiment = async () => {
+        if (!experimentName.trim()) {
+            setNameError(true);
+            return;
+        }
 
-    const handleCreateExperiment = () => {
-        const experiment = new Experiment(
-            crypto.randomUUID(),
-            experimentName,
-            experimentDescription,
-            experimentHypothesis,
-            scenarios,
-            userId,
-            metrics,
-            customMetrics,
-            labels
-        );
-        console.log("Experiment to be created:", experiment);
-        onExperimentCreated(experiment);
+        setNameError(false);
+        let experiment: ExperimentDetailed;
+        
+        
+        if (mode === "edit") {
+            experiment = {
+                ...initialExperiment,
+                name: experimentName,
+                description: experimentDescription,
+                hypothesis: experimentHypothesis,
+                scenarios,
+                metrics,
+                labels
+            };
+            await updateExperiment(experiment);
+        } else {
+            experiment = new ExperimentDetailed(
+                crypto.randomUUID(),
+                experimentName,
+                experimentDescription,
+                experimentHypothesis,
+                scenarios,
+                metrics,
+                labels,
+                ExperimentRoleEnum.OWNER,
+            );
+            await createExperiment(experiment);
+        }
+        onSuccess(experiment);
     };
 
     return (
@@ -68,16 +86,22 @@ export default function ExperimentCreationForm({ onExperimentCreated, onCancel }
                         setExperimentHypothesis={setExperimentHypothesis}
                         metrics={metrics}
                         setMetrics={setMetrics}
-                        customMetrics={customMetrics}
-                        setCustomMetrics={setCustomMetrics}
                         labels={labels}
                         setLabels={setLabels}
+                        nameError={nameError}
+                        setNameError={setNameError}
                     />
 
                     <ScenarioForm scenarios={scenarios} setScenarios={setScenarios} />
                     
                     <div className="d-flex justify-content-end gap-3">
-                        <CreateExperimentButton onClick={handleCreateExperiment} />
+                        {mode === "edit" ? (
+                            <button className="btn btn-primary" onClick={handleCreateExperiment}>
+                                Save Changes
+                            </button>
+                        ) : (
+                            <CreateExperimentButton onClick={handleCreateExperiment} />
+                        )}
                         <CancelButton onClick={onCancel} />
                     </div>
                 </div>

@@ -12,23 +12,22 @@ interface SelectMetricModalProps {
     onClose: () => void;
     setSelectedMetrics: React.Dispatch<React.SetStateAction<Metric[]>>;
     selectedMetrics: Metric[];
-    selectedCustomMetrics: Metric[];
-    setSelectedCustomMetrics: React.Dispatch<React.SetStateAction<Metric[]>>;
 }
 
-export default function SelectMetricModal({ show, onClose, setSelectedMetrics, selectedMetrics, selectedCustomMetrics, setSelectedCustomMetrics }: SelectMetricModalProps) {
+export default function SelectMetricModal({ show, onClose, setSelectedMetrics, selectedMetrics, }: SelectMetricModalProps) {
     const [activeTab, setActiveTab] = useState("MetricsCatalog");
     const [searchTerm, setSearchTerm] = useState("");
     const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
     const [metricsCatalog, setMetricsCatalog] = useState<Metric[]>([]);
-    const [selectedMetricsState, setSelectedMetricsState] = useState<Metric[]>([]);
+    const selectedCustomMetrics = selectedMetrics.filter((metric) => metric.isCustom)
+    const [selectedMetricsState, setSelectedMetricsState] = useState<Metric[]>(selectedCustomMetrics);
     const [selectedCustomMetricsState, setSelectedCustomMetricsState] = useState<Metric[]>([]);
     const currentMetrics = activeTab === "MetricsCatalog" ? metricsCatalog : activeTab === "CustomMetrics" ? selectedCustomMetricsState : [];
     const [hasLoadedMetrics, setHasLoadedMetrics] = useState(false);
     const filteredMetrics = currentMetrics.filter((metric) => metric.name.toLowerCase().includes(searchTerm.toLowerCase()));
     const [showModal, setShowModal] = useState(false);
 
-    const publishCustomMetrics = () => {
+    const publishCustomMetrics = () => { 
         const metricsToPublish = selectedCustomMetricsState.filter(custom =>
             selectedMetricsState.some(selected => selected.id === custom.id)
         );
@@ -50,10 +49,6 @@ export default function SelectMetricModal({ show, onClose, setSelectedMetrics, s
     useEffect(() => {
         setSelectedMetricsState(selectedMetrics);
     }, [selectedMetrics]);
-
-    useEffect(() => {
-        setSelectedCustomMetricsState(selectedCustomMetrics);
-    }, [selectedCustomMetrics]);
 
     const loadMetrics = async () => {
         setIsLoadingMetrics(true);
@@ -175,8 +170,10 @@ export default function SelectMetricModal({ show, onClose, setSelectedMetrics, s
                 <Button
                     variant="primary"
                     onClick={() => {
-                        setSelectedMetrics(selectedMetricsState);
-                        setSelectedCustomMetrics(selectedCustomMetricsState);
+                        setSelectedMetrics([
+                        ...selectedMetricsState,
+                        ...selectedCustomMetricsState,
+                        ]);                        
                         onClose();
                     }}
                 >
@@ -188,9 +185,7 @@ export default function SelectMetricModal({ show, onClose, setSelectedMetrics, s
                     onClick={() => {
                             setSelectedMetricsState([]); 
                             setSelectedMetrics([]);
-                            setSelectedCustomMetricsState([]); 
-                            setSelectedCustomMetrics([]);
-                    }}
+                            setSelectedCustomMetricsState([]);                    }}
                     disabled={selectedMetricsState.length === 0}
                 >
                     Clear
