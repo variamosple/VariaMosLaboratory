@@ -12,7 +12,7 @@ import * as alertify from "alertifyjs";
 import { deleteExperiment, archiveExperiment, copyExperiment, shareExperiment, restoreExperiment } from "../../../DataProvider/Services/experimentService";
 import { Experiment } from "@domain/Laboratory/Entities/Experiment";
 import ConfirmationModal from "../../ConfirmationModal/ConfirmationModal";
-import ShareDialog from "../../ShareDialog/ShareDialog";
+import ShareDialog from "../../Collaboration/Components/ShareDialog";
 import { ExperimentRoleEnum } from "@domain/Laboratory/Entities/Collaborator";
 
 type ModalAction = "delete" | "archive" | "copy" | "restore" | null;
