@@ -1,10 +1,11 @@
 import { Paginator } from "@variamosple/variamos-components";
 import { Alert, Button, Table } from "react-bootstrap";
-import { Archive, Copy, Share, Trash } from "react-bootstrap-icons";
+import { Archive, Copy, Share, Trash, PencilSquare } from "react-bootstrap-icons";
 
 import { ExperimentsListProps } from "../../LaboratoryContainer.types";
 
 import "./ExperimentList.css";
+import { ExperimentRoleEnum } from "../../../../Domain/Laboratory/Entities/Collaborator";
 
 export default function ExperimentsList({
   experiments,
@@ -20,11 +21,11 @@ export default function ExperimentsList({
   onExperimentShare,
   selectedExperiment,
   onExperimentSelect,
+  onExperimentEdit,
 }: ExperimentsListProps) {
   if (!experiments?.length) {
     return <Alert variant="info">No results available</Alert>;
   }
-
   const handleButtonClick =
     (
       e: React.MouseEvent,
@@ -34,6 +35,8 @@ export default function ExperimentsList({
       e.stopPropagation();
       callback?.(experiment);
     };
+
+    console.log("ExperimentsList rendered", experiments);
 
   return (
     <div className="d-flex flex-column">
@@ -106,11 +109,27 @@ export default function ExperimentsList({
               </td>
 
               {(mode === "shared" || mode === "group") && (
-                <td>{experiment.userId}</td>
+                <td>{experiment.userRole}</td>
               )}
-              {(mode !== "template") && (
+              {mode !== "template" && (       
               <td className="actions-column">
                 <div className="actions-container">
+                  {experiment.userRole !== ExperimentRoleEnum.VIEWER && (
+                  <Button 
+                    variant="primary"
+                    size="sm"
+                    title="Edit experiment"
+                    onClick={(e) =>
+                      handleButtonClick(
+                        e,
+                        onExperimentEdit,
+                        experiment
+                      )
+                    }
+                  >
+                    <PencilSquare />
+                  </Button>
+                  )}
                   <Button
                     variant="primary"
                     size="sm"

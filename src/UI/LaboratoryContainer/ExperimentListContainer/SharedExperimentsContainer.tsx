@@ -1,25 +1,22 @@
-import {
-  usePaginatedQuery,
-  withPageVisit,
-} from "@variamosple/variamos-components";
-import ExperimentContainerComponent from "./ExperimentContainer";
-import {ExperimentContainerInitialProps} from "../LaboratoryContainer.types";
-import { ExperimentFilter } from "../../../Domain/Laboratory/Entities/ExperimentFilter";
-import { Experiment } from "../../../Domain/Laboratory/Entities/Experiment";
-import { getSharedExperiments } from "../../../DataProvider/Services/experimentService";
+import { withPageVisit } from "@variamosple/variamos-components";
+import ExperimentsContainerComponent from "./ExperimentsContainer";
+import {ExperimentsContainerInitialProps} from "../LaboratoryContainer.types";
 
-export default function SharedExperimentsContainerComponent({onExperimentClick, loadDataOnInit = true, }: ExperimentContainerInitialProps) {
 
-    const queryData = usePaginatedQuery<ExperimentFilter, Experiment>({
-      queryFunction: getSharedExperiments,
-      initialFilter: new ExperimentFilter(),
-    });
+
+export default function SharedExperimentsContainerComponent({
+  onExperimentClick, 
+  loadDataOnInit = true, 
+  queryData, 
+  onExperimentEdit}: ExperimentsContainerInitialProps) {
+
   return (
-    <ExperimentContainerComponent 
+    <ExperimentsContainerComponent 
       onExperimentClick={onExperimentClick} 
       loadDataOnInit={loadDataOnInit} 
       mode="shared" 
-      queryData={queryData} 
+      queryData={queryData}
+      onExperimentEdit={onExperimentEdit} 
     />
   );
 };

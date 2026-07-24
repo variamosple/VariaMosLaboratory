@@ -1,28 +1,22 @@
-import {
-  usePaginatedQuery,
-  withPageVisit,
-} from "@variamosple/variamos-components";
-import ExperimentContainerComponent from "./ExperimentContainer";
-import {ExperimentContainerInitialProps} from "../LaboratoryContainer.types";
-import { ExperimentFilter } from "../../../Domain/Laboratory/Entities/ExperimentFilter";
-import { getExperimentsByUser } from "../../../DataProvider/Services/experimentService";
-import { Experiment } from "@domain/Laboratory/Entities/Experiment";
+import { withPageVisit } from "@variamosple/variamos-components";
+import ExperimentsContainerComponent from "./ExperimentsContainer";
+import {ExperimentsContainerInitialProps} from "../LaboratoryContainer.types";
 
-export default function UserExperimentsContainerComponent({onExperimentClick, loadDataOnInit = true,}: ExperimentContainerInitialProps) {
-  const queryData = usePaginatedQuery<ExperimentFilter, Experiment>({
-    queryFunction: getExperimentsByUser,
-    initialFilter: new ExperimentFilter(),
-  });
-
+export default function UserExperimentsContainerComponent({
+  onExperimentClick, 
+  loadDataOnInit = true, 
+  queryData, 
+  onExperimentEdit }: ExperimentsContainerInitialProps) {
 
   return (
     <div>
-    <ExperimentContainerComponent 
-      onExperimentClick={onExperimentClick} 
-      loadDataOnInit={loadDataOnInit} 
-      mode="user" 
-      queryData={queryData}
-    />
+      <ExperimentsContainerComponent 
+        onExperimentClick={onExperimentClick} 
+        loadDataOnInit={loadDataOnInit} 
+        mode="user" 
+        queryData={queryData}
+        onExperimentEdit={onExperimentEdit}
+      />
     </div>
   );
 };

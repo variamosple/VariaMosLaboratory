@@ -1,20 +1,23 @@
-import {
-  usePaginatedQuery,
-  withPageVisit,
-} from "@variamosple/variamos-components";
-import ExperimentContainerComponent from "./ExperimentContainer";
-import {ExperimentContainerInitialProps} from "../LaboratoryContainer.types";
-import { ExperimentFilter } from "../../../Domain/Laboratory/Entities/ExperimentFilter";
-import { Experiment } from "../../../Domain/Laboratory/Entities/Experiment";
-import { getArchivedExperiments } from "../../../DataProvider/Services/experimentService";
+import { withPageVisit } from "@variamosple/variamos-components";
+import ExperimentContainerComponent from "./ExperimentsContainer";
+import {ExperimentsContainerInitialProps} from "../LaboratoryContainer.types";
 
 
-export default function ArchivedExperimentsContainerComponent({onExperimentClick, loadDataOnInit = true, experimentSelected, onExperimentSelect }: ExperimentContainerInitialProps) {
+type ArchivedExperimentsContainerProps = ExperimentsContainerInitialProps & {
+  onExperimentRestored: () => void;
+  onCopyExperiment: () => void;
+};
 
-    const queryData = usePaginatedQuery<ExperimentFilter, Experiment>({
-      queryFunction: getArchivedExperiments,
-      initialFilter: new ExperimentFilter(),
-    });
+export default function ArchivedExperimentsContainerComponent({
+    onExperimentClick, 
+    loadDataOnInit = true, 
+    experimentSelected, 
+    onExperimentSelect, 
+    onExperimentRestored, 
+    queryData,
+    onCopyExperiment
+  }: ArchivedExperimentsContainerProps) {
+
   return (
     <ExperimentContainerComponent 
       onExperimentClick={onExperimentClick} 
@@ -23,6 +26,8 @@ export default function ArchivedExperimentsContainerComponent({onExperimentClick
       queryData={queryData} 
       experimentSelected={experimentSelected}
       onExperimentSelect={onExperimentSelect}
+      onExperimentRestored={onExperimentRestored}
+      handleExperimentCopy={onCopyExperiment}
     />
   );
 };
