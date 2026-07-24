@@ -423,9 +423,7 @@ export default function MxGEditor({ model }: Props) {
                 ne.setAttribute("name", element.type);
                 MxgraphUtils.modifyShape(ne);
                 let stencil = new mx.mxStencil(ne);
-                mx.mxStencilRegistry.addStencil(element.type, stencil);
-                console.log(stencil);
-                console.log(stencil.fgNode);             
+                mx.mxStencilRegistry.addStencil(element.type, stencil);         
               }
 
               let parent = graphRef.current.getDefaultParent();
@@ -571,10 +569,6 @@ export default function MxGEditor({ model }: Props) {
         });
 
         graphRef.current.addCellOverlay(cell, overlayFrame);
-        console.log(
-  "Overlays count:",
-  graphRef.current.getCellOverlays(cell)?.length
-);
         graphRef.current.refresh();
       }
     }
