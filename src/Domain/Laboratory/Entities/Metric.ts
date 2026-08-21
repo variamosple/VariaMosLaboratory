@@ -6,5 +6,4 @@ export interface Metric {
     unit: string;
     description?: string;
     script?: string;
-    isCustom?: boolean;
 }

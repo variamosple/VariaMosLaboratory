@@ -24,8 +24,6 @@ export default function MxGEditor({ model }: Props) {
   // Refs
   const containerRef = useRef<any>(null);
   const graphContainerRef = useRef<any>(null);
-
-  // Variables d'instance (équivalent aux propriétés de classe)
   const modelSnapshots = useRef<Map<string, { elements: any[]; relationships: any[] }>>(new Map());
 
   // State

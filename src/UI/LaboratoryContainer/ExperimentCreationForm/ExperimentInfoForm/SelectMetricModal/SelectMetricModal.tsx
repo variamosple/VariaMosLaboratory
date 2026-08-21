@@ -6,6 +6,7 @@ import MetricCard from "./MetricCard/MetricCard";
 import "./SelectMetricModal.css";
 import CreateMetricForm from "./CreateMetricForm/CreateMetricForm";
 import ConfirmationModal from "../../../../ConfirmationModal/ConfirmationModal";
+import { getPublicMetrics, getUserMetrics, updateMetric, createMetric, deleteMetric, publishMetrics } from "../../../../../DataProvider/Services/metricService";
 
 interface SelectMetricModalProps {
     show: boolean;
@@ -18,32 +19,31 @@ export default function SelectMetricModal({ show, onClose, setSelectedMetrics, s
     const [activeTab, setActiveTab] = useState("MetricsCatalog");
     const [searchTerm, setSearchTerm] = useState("");
     const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
-    const [metricsCatalog, setMetricsCatalog] = useState<Metric[]>([]);
-    const selectedCustomMetrics = selectedMetrics.filter((metric) => metric.isCustom)
+    const selectedCustomMetrics = selectedMetrics.filter((metric) => metric.userId!== null);
     const [selectedMetricsState, setSelectedMetricsState] = useState<Metric[]>(selectedCustomMetrics);
-    const [selectedCustomMetricsState, setSelectedCustomMetricsState] = useState<Metric[]>([]);
-    const currentMetrics = activeTab === "MetricsCatalog" ? metricsCatalog : activeTab === "CustomMetrics" ? selectedCustomMetricsState : [];
+    const [publicMetrics, setPublicMetrics] = useState<Metric[]>([]);
+    const [customMetrics, setCustomMetrics] = useState<Metric[]>([]);
     const [hasLoadedMetrics, setHasLoadedMetrics] = useState(false);
-    const filteredMetrics = currentMetrics.filter((metric) => metric.name.toLowerCase().includes(searchTerm.toLowerCase()));
     const [showModal, setShowModal] = useState(false);
+    const currentMetrics = activeTab === "MetricsCatalog" ? publicMetrics : activeTab === "CustomMetrics" ? customMetrics : [];
+    const filteredMetrics = currentMetrics.filter((metric) => metric.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const publishCustomMetrics = () => { 
-        const metricsToPublish = selectedCustomMetricsState.filter(custom =>
-            selectedMetricsState.some(selected => selected.id === custom.id)
-        );
-
-        setMetricsCatalog(prev => [...prev, ...metricsToPublish]);
-
-        setSelectedCustomMetricsState(prev =>
-            prev.filter(
-                custom =>
-                    !metricsToPublish.some(
-                        published => published.id === custom.id
-                    )
-            )
-        );
-
-        setShowModal(false);
+    const publishCustomMetrics = async () => { 
+        const metricsToPublish = selectedMetricsState.filter(metric => metric.userId !== null);
+        try {
+            await publishMetrics(metricsToPublish);
+            setCustomMetrics(prev =>prev.filter(custom =>!metricsToPublish.some(published => published.id === custom.id)));
+            setPublicMetrics(prev => [
+                ...prev,
+                ...metricsToPublish.map(metric => ({
+                    ...metric,
+                    isCustom: false,
+                })),
+            ]);
+            setShowModal(false);
+        } catch (error) {
+            console.error("Failed to publish metrics:", error);
+        }
     };
 
     useEffect(() => {
@@ -52,35 +52,27 @@ export default function SelectMetricModal({ show, onClose, setSelectedMetrics, s
 
     const loadMetrics = async () => {
         setIsLoadingMetrics(true);
-        // Simulate loading metrics with a timeout
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setPublicMetrics(await getPublicMetrics());
+        setCustomMetrics(await getUserMetrics());
         setIsLoadingMetrics(false);
+        setHasLoadedMetrics(true);
     };
 
     useEffect(() => {
         if (!show || hasLoadedMetrics) {
             return;
         }
-        loadMetrics().then(() => {
-            // Simulate loaded metrics
-            setMetricsCatalog([
-                { id: "1", name: "Metric 1", description: "Description for Metric 1", formula: "formula1", unit: "unit1" },
-                { id: "2", name: "Metric 2", description: "Description longer for this metric, to see how it would look. It has multiple lines of text.", formula: "formula2", unit: "unit2" },
-                { id: "3", name: "Metric 3", description: "Description for Metric 3", formula: "formula3", unit: "unit3" },
-                { id: "4", name: "Metric 4", description: "Description for Metric 4", formula: "formula4", unit: "unit4" },
-                { id: "5", name: "Metric 5", description: "Description for Metric 5", formula: "formula5", unit: "unit5" },
-                { id: "6", name: "Metric 6", description: "Description for Metric 6", formula: "formula6", unit: "unit6" },
-            ]);
-            setHasLoadedMetrics(true);
-        });
+        loadMetrics()
     }, [show, hasLoadedMetrics]);
 
     const toggleMetric = (metric: Metric, checked: boolean ) => {
         setSelectedMetricsState((prev) => checked ? [...prev, metric] : prev.filter((m) => m.id !== metric.id));
     };
 
-    const onCreate = (newMetric: Metric) => {
-        setSelectedCustomMetricsState((prev) => [...prev, newMetric]);
+    const onCreate = async (newMetric: Metric) => {
+        await createMetric(newMetric);
+        setSelectedMetricsState((prev) => [...prev, newMetric]);
+        setCustomMetrics((prev) => [...prev, newMetric]);
         setActiveTab("CustomMetrics");
         toggleMetric(newMetric, true);
     }
@@ -153,11 +145,11 @@ export default function SelectMetricModal({ show, onClose, setSelectedMetrics, s
                     </div>
                     {activeTab === "CustomMetrics" && (
                     <div className="d-flex justify-content-end mt-4">
-                        <Button variant="primary" className="mt-4" onClick={() => setShowModal(true)} disabled={selectedCustomMetricsState.length === 0}>
+                        <Button variant="primary" className="mt-4" onClick={() => setShowModal(true)} disabled={selectedMetricsState.filter(metric => metric.userId !== null).length === 0}>
                             Publish Selected Custom Metrics{" "}
                                 ({selectedMetricsState.filter(
                                     (selected) =>
-                                        selectedCustomMetricsState.some((custom) => custom.id === selected.id)
+                                        selectedMetricsState.filter(metric => metric.userId !== null).some((custom) => custom.id === selected.id)
                                 ).length})                        
                         </Button>
                     </div>
@@ -172,7 +164,6 @@ export default function SelectMetricModal({ show, onClose, setSelectedMetrics, s
                     onClick={() => {
                         setSelectedMetrics([
                         ...selectedMetricsState,
-                        ...selectedCustomMetricsState,
                         ]);                        
                         onClose();
                     }}
@@ -185,7 +176,7 @@ export default function SelectMetricModal({ show, onClose, setSelectedMetrics, s
                     onClick={() => {
                             setSelectedMetricsState([]); 
                             setSelectedMetrics([]);
-                            setSelectedCustomMetricsState([]);                    }}
+                        }}
                     disabled={selectedMetricsState.length === 0}
                 >
                     Clear

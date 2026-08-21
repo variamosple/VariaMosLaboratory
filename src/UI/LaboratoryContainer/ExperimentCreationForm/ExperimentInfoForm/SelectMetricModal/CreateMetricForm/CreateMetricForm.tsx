@@ -1,8 +1,8 @@
 import { Form, Row, Col, InputGroup, Button } from "react-bootstrap";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./CreateMetricForm.css";
 import { Metric } from "@domain/Laboratory/Entities/Metric";
-
+import { useSession } from "@variamosple/variamos-components";
 type CreateMetricFormProps = {
     onCreate: (newMetric: Metric) => void;
 };
@@ -13,6 +13,13 @@ export default function CreateMetricForm({ onCreate }: CreateMetricFormProps) {
     const [formula, setFormula] = useState("");
     const [unit, setUnit] = useState("");
     const [script, setScript] = useState("");
+    const [userId, setUserId] = useState("currentUserId"); 
+    const { user } = useSession();
+
+    useEffect(() => {
+        const userId = user.id
+        setUserId(userId);
+    }, [user]);
 
     const handleCreate = () => {
         if (!name || !formula || !unit || !script) {
@@ -26,6 +33,7 @@ export default function CreateMetricForm({ onCreate }: CreateMetricFormProps) {
             formula,
             unit,
             script,
+            userId: userId, // Replace with actual user ID
         };
         onCreate(newMetric);
         setName("");
