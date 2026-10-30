@@ -27,8 +27,8 @@ module.exports = {
     schema: "variamos_laboratory_e2e",
   },
 
-  USER: { id: "user-dana", user: "dana", name: "Dana Researcher", email: "dana@example.org", roles: ["Researcher"], permissions: [] },
-  USER2: { id: "user-eli", user: "eli", name: "Eli Collaborator", email: "eli@example.org", roles: ["Researcher"], permissions: [] },
+  USER: { id: "user-dana", user: "dana", name: "Dana Researcher", email: "dana@example.org", roles: ["Researcher"], permissions: ["laboratory::access"] },
+  USER2: { id: "user-eli", user: "eli", name: "Eli Collaborator", email: "eli@example.org", roles: ["Researcher"], permissions: ["laboratory::access"] },
   PROJECTS: [
     { id: "project-cars", name: "Car product line" },
     { id: "project-robots", name: "Robot product line" },
