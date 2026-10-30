@@ -39,10 +39,10 @@
 }
 
 .collaboration-awareness {
-  /* Los estilos específicos están en ProjectAwareness.css */
+  /* The specific styles are in ProjectAwareness.css */
 }
 
-/* Ajustes para que los botones se vean mejor en el panel */
+/* Adjustments so that the buttons look better in the panel */
 .collaboration-panel .project-collaboration {
   justify-content: center;
   gap: 6px;
@@ -56,7 +56,7 @@
   padding: 6px 8px;
 }
 
-/* Ajustes para el awareness en el panel */
+/* Adjustments for the awareness in the panel */
 .collaboration-panel .project-awareness {
   margin: 0;
   border: none;

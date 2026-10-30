@@ -10,7 +10,7 @@ export class ProjectInformation {
   author: string;
   date: Date;
 
-  // Nuevo
+  // New
   owner_id: string;  
   is_collaborative: boolean
   role?: string;

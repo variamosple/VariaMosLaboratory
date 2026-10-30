@@ -192,7 +192,7 @@ export default function ProjectCollaboration({experiment}: ProjectCollaborationP
                         </div>
                       )}
 
-                      {/* Botón para eliminar colaborador */}
+                      {/* Button to remove a collaborator */}
                       <Button
                         variant="danger"
                         size="sm"

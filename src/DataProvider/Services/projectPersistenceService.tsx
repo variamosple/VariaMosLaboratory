@@ -449,7 +449,7 @@ export class VariamosAIService {
     try {
       const res = await PROJECTS_CLIENT.post("/api/ai/chat", req, {
         timeout: 60000,
-        // importante si hay cookies/sesión cross-origin
+        // needed when there are cross-origin cookies or sessions
         withCredentials: true,
         headers: { "Content-Type": "application/json" }
       });
@@ -463,7 +463,7 @@ export class VariamosAIService {
         String(raw?.usedModelId ?? raw?.model ?? req.primaryModelId ?? "").trim();
 
       if (!content) {
-        // Esto te dice “respondió pero no con el schema esperado”
+        // This tells you "it answered, but not with the expected schema"
         throw new Error(
           `AI backend returned no content. Keys=${Object.keys(raw).join(",")}`
         );
@@ -475,7 +475,7 @@ export class VariamosAIService {
       const data = error?.response?.data;
       const cfg = error?.config;
 
-      // 👇 súper útil para encontrar /api/api, baseURL incorrecto, etc.
+      // Useful to find /api/api, a wrong baseURL, etc.
       console.error("[AI chat] request:", {
         baseURL: cfg?.baseURL,
         url: cfg?.url,
