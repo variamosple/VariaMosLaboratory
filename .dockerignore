@@ -1,0 +1,6 @@
+node_modules
+build
+.git
+# The end-to-end tests, their browsers and reports stay out of the image
+e2e
+.env.development
