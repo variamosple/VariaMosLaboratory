@@ -17,7 +17,7 @@ interface CompareVersionsModalProps {
 const isEmptyScenario = (
   scenario: ExperimentDetailed["scenarios"][number]
 ) =>
-  !scenario.modelId &&
+  scenario.models.length === 0 &&
   (!scenario.solverConfigs ||
     Object.keys(scenario.solverConfigs).length === 0);
 
@@ -25,7 +25,9 @@ const scenarioSignature = (
   scenario: ExperimentDetailed["scenarios"][number]
 ) =>
   JSON.stringify({
-    modelId: scenario.modelId ?? null,
+    name: scenario.name ?? null,
+    modelIds: scenario.models.map((ref) => ref.modelId),
+    operationalContext: scenario.operationalContext ?? null,
     solverConfigs: isEmptyScenario(scenario)
       ? null
       : scenario.solverConfigs,
@@ -53,7 +55,7 @@ const scenarioExists = (
   >
     <Card.Body>
       <div className="d-flex justify-content-between mb-2">
-        <strong>Scenario</strong>
+        <strong>{scenario.name || "Scenario"}</strong>
 
         {status === "added" && (
           <Badge bg="success">
@@ -69,13 +71,24 @@ const scenarioExists = (
       </div>
 
       <div className="mb-2">
-        <strong>Model:</strong>{" "}
-        {scenario.modelId ?? (
+        <strong>Models:</strong>{" "}
+        {scenario.models.length > 0 ? (
+          scenario.models.map((ref) => ref.model?.name ?? ref.modelId).join(", ")
+        ) : (
           <span className="text-muted">
             No model selected
           </span>
         )}
       </div>
+
+      {scenario.operationalContext && (
+        <div className="mb-2 small">
+          <strong>Context:</strong>{" "}
+          on: {scenario.operationalContext.activeFeatures.join(", ") || "none"};
+          off: {scenario.operationalContext.inactiveFeatures.join(", ") || "none"}
+          {scenario.operationalContext.extraConstraints && "; extra constraints set"}
+        </div>
+      )}
 
       <div>
         <strong>Configuration:</strong>

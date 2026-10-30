@@ -58,6 +58,16 @@ describe("front-back experiments contract", () => {
     });
   });
 
+  test("asks for the experiments of one project (LAB-EX-01)", async () => {
+    const backendResponse = { transactionId: "getUserExperiments", data: [] };
+    http.onGet("/experiments", {
+      params: { userId: "user-1", name: "", pageNumber: 1, pageSize: 10, projectId: "project-1" },
+    }).reply(200, backendResponse);
+
+    const filter = { userId: "user-1", name: "", pageNumber: 1, pageSize: 10, projectId: "project-1" } as any;
+    await expect(getUserExperiments(filter)).resolves.toEqual(backendResponse);
+  });
+
   test("creates an experiment and then loads its detailed representation", async () => {
     const experiment = {
       id: "experiment-1",

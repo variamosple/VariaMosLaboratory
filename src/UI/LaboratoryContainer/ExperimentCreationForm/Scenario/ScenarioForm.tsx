@@ -26,7 +26,7 @@ export default function ScenarioForm({scenarios, setScenarios}: ScenarioFormProp
     };
 
     const askDeleteScenario = (scenario: Scenario) => {
-        const isNotEmpty = scenario.model !== null || scenario.solverConfigs !== null;
+        const isNotEmpty = scenario.models.length > 0 || Object.keys(scenario.solverConfigs ?? {}).length > 0;
 
         if (isNotEmpty) {
             setScenarioToDelete(scenario.id);
@@ -61,7 +61,7 @@ export default function ScenarioForm({scenarios, setScenarios}: ScenarioFormProp
                     <Nav.Item key={scenario.id}>
                         <Nav.Link eventKey={scenario.id} className="d-flex align-items-center gap-2">
                             <span>
-                                Scenario {index + 1}
+                                {scenario.name?.trim() || `Scenario ${index + 1}`}
                             </span>
 
                             {scenarios.length > 1 && (
@@ -95,7 +95,6 @@ export default function ScenarioForm({scenarios, setScenarios}: ScenarioFormProp
                             scenario={scenario}
                             updateScenario={(updatedScenario: Scenario) => {
                                 setScenarios(prev => prev.map((s) => s.id === updatedScenario.id ? updatedScenario: s));
-                                console.log("Updated scenario:", updatedScenario);
                             }}
                         />
                     </Tab.Pane>

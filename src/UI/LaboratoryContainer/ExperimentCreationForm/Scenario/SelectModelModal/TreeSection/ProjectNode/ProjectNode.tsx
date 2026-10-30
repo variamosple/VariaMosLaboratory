@@ -9,19 +9,19 @@ type ProjectNodeProps = {
     projectInfo: ProjectInformation;
     project?: Project;
     onExpand: (projectInfo: ProjectInformation) => void;
-    selectedModel: Model | null;
+    selectedModelIds: string[];
     onToggleModel: (model: Model, checked: boolean) => void;
 };
 
-export default function ProjectNode({ projectInfo, project, onExpand, selectedModel, onToggleModel }: ProjectNodeProps) {
+export default function ProjectNode({ projectInfo, project, onExpand, selectedModelIds, onToggleModel }: ProjectNodeProps) {
     const [expanded, setExpanded] = useState(false);
     
     const selectedLength = project? project.productLines.reduce(
         (count, pl) =>
-            count + (selectedModel && [
+            count + [
                 ...(pl.domainEngineering?.models ?? []),
                 ...(pl.applicationEngineering?.models ?? []),
-            ].some((model) => model.id === selectedModel.id) ? 1 : 0), 0
+            ].filter((model) => selectedModelIds.includes(model.id)).length, 0
         ) : 0;
 
     const handleToggleModel = ( model: Model, checked: boolean ) => {
@@ -88,7 +88,7 @@ export default function ProjectNode({ projectInfo, project, onExpand, selectedMo
                     <ProductLineNode
                         key={pl.id}
                         productLine={pl}
-                        selectedModel={selectedModel}
+                        selectedModelIds={selectedModelIds}
                         onToggleModel={handleToggleModel}
                     />
                 ))}

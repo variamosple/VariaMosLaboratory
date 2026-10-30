@@ -15,6 +15,7 @@ export default function ArchivedExperimentsContainerComponent({
     onExperimentSelect, 
     onExperimentRestored, 
     queryData,
+    projectId,
     onCopyExperiment
   }: ArchivedExperimentsContainerProps) {
 
@@ -23,6 +24,7 @@ export default function ArchivedExperimentsContainerComponent({
       onExperimentClick={onExperimentClick} 
       loadDataOnInit={loadDataOnInit} 
       mode="archived" 
+      projectId={projectId}
       queryData={queryData} 
       experimentSelected={experimentSelected}
       onExperimentSelect={onExperimentSelect}

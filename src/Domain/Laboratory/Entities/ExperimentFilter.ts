@@ -5,7 +5,14 @@ export class ExperimentFilter extends PagedModel {
     public name?: string,
     public userId?: string,
     pageNumber?: number,
-    pageSize?: number
+    pageSize?: number,
+    public projectId?: string,
+    /** LAB-COL-04 */
+    public researcher?: string,
+    public status?: string,
+    public createdFrom?: string,
+    public createdTo?: string,
+    public type?: "experiment" | "template" | "benchmark"
   ) {
     super(pageNumber, pageSize);
   }

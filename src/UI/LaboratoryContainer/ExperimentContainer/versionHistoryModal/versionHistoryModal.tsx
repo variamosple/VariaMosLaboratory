@@ -50,6 +50,9 @@ export default function VersionHistoryModal({ show, onHide, versionHistory, hand
             case "hypothesis_updated":
             return "Updated hypothesis";
 
+            case "project_updated":
+            return "Moved to another project";
+
             case "labels_updated":
             return "Updated labels";
 
@@ -67,6 +70,36 @@ export default function VersionHistoryModal({ show, onHide, versionHistory, hand
 
             case "scenario_solver_config_updated":
             return "Updated scenario solver configuration";
+            case "scenario_updated":
+            return "Updated scenario name or operational context";
+            case "status_changed":
+            return `Status changed from ${entry.oldValue} to ${entry.newValue}`;
+            case "experiment_archived":
+            return "Experiment archived";
+            case "experiment_restored":
+            return "Experiment restored";
+            case "experiment_deleted":
+            return "Experiment deleted";
+            case "version_restored":
+            return `Restored version ${entry.newValue?.version}`;
+            case "published_as_template":
+            return "Published as a template";
+            case "published_as_benchmark":
+            return "Published as a benchmark";
+            case "collaborator_shared":
+            return `Shared as ${entry.newValue?.role}`;
+            case "collaborator_removed":
+            return "Removed a collaborator";
+            case "run_started":
+            return `Started run #${entry.newValue?.number}`;
+            case "run_completed":
+            return `Run #${entry.newValue?.number} completed`;
+            case "run_failed":
+            return `Run #${entry.newValue?.number} failed`;
+            case "run_cancelled":
+            return `Run #${entry.newValue?.number} cancelled`;
+            case "experiment_reproduced":
+            return `Rebuilt from the package of ${entry.newValue?.persistentId}`;
 
             default:
             return entry.eventType;
@@ -108,6 +141,7 @@ export default function VersionHistoryModal({ show, onHide, versionHistory, hand
                                 checked={selectedVersions.includes(entry.experimentVersion)}
                                 onChange={() => toggleVersionSelection(entry.experimentVersion)}
                                 className="me-2"
+                                aria-label={`Select version ${entry.experimentVersion} to compare`}
                             />
                             <div
                                 className="d-flex align-items-center justify-content-center border rounded-circle"

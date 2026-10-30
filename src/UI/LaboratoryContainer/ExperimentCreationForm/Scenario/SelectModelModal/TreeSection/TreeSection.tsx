@@ -7,11 +7,11 @@ type TreeSectionProps = {
     projects: ProjectInformation[];
     loadedProjects: Record< string, Project >;
     onExpandProject: ( project: ProjectInformation ) => void;
-    selectedModel: Model | null;
+    selectedModelIds: string[];
     onToggleModel: ( model: Model, checked: boolean ) => void;
 };
 
-export default function TreeSection({ projects, loadedProjects, onExpandProject, selectedModel, onToggleModel }: TreeSectionProps) {
+export default function TreeSection({ projects, loadedProjects, onExpandProject, selectedModelIds, onToggleModel }: TreeSectionProps) {
 
     return (
         <div className="mb-3">
@@ -22,7 +22,7 @@ export default function TreeSection({ projects, loadedProjects, onExpandProject,
                             projectInfo={ projectInfo }
                             project={ loadedProjects[projectInfo.id]}
                             onExpand={ onExpandProject }
-                            selectedModel={ selectedModel }
+                            selectedModelIds={selectedModelIds}
                             onToggleModel={ onToggleModel }
                         />
                     )

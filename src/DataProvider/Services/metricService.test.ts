@@ -54,13 +54,14 @@ describe("metric service", () => {
     expect(remove).toHaveBeenCalledWith("/metrics/metric-1");
   });
 
-  test("publishes every metric by clearing its user", async () => {
-    const put = jest.spyOn(LABORATORY_CLIENT, "put").mockResolvedValue({ data: {} } as any);
+  test("publishes metrics through the publish route, which checks the author", async () => {
+    const post = jest.spyOn(LABORATORY_CLIENT, "post").mockResolvedValue({ data: {} } as any);
+    const put = jest.spyOn(LABORATORY_CLIENT, "put");
 
     await expect(publishMetrics([{ id: "one" }, { id: "two" }])).resolves.toBeUndefined();
 
-    expect(put).toHaveBeenNthCalledWith(1, "/metrics/one", { userId: null });
-    expect(put).toHaveBeenNthCalledWith(2, "/metrics/two", { userId: null });
+    expect(post).toHaveBeenCalledWith("/metrics/publish", ["one", "two"]);
+    expect(put).not.toHaveBeenCalled();
   });
 
   test("propagates metric request errors", async () => {

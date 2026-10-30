@@ -2,6 +2,8 @@ import { useState } from "react";
 import SelectButton from "../../../Buttons/SelectButton/SelectButton";
 import SelectMetricModal from "./SelectMetricModal/SelectMetricModal";
 import { Metric } from "@domain/Laboratory/Entities/Metric";
+import { ProjectSummary } from "../../../../DataProvider/Services/userProjectsService";
+import ProjectSelect from "../../../ProjectSelect/ProjectSelect";
 type ExperimentInfoFormProps = {
     experimentName: string;
     setExperimentName: React.Dispatch<React.SetStateAction<string>>;
@@ -14,6 +16,10 @@ type ExperimentInfoFormProps = {
     setLabels: React.Dispatch<React.SetStateAction<string[]>>;
     nameError: boolean;
     setNameError: React.Dispatch<React.SetStateAction<boolean>>;
+    projects: ProjectSummary[];
+    projectId: string;
+    setProjectId: (projectId: string) => void;
+    projectError: boolean;
 };
 
 export default function ExperimentInfoForm({ 
@@ -28,7 +34,11 @@ export default function ExperimentInfoForm({
     labels,
     setLabels,
     nameError,
-    setNameError
+    setNameError,
+    projects,
+    projectId,
+    setProjectId,
+    projectError
     }: ExperimentInfoFormProps) {
 
     const [showSelectMetricModal, setShowSelectMetricModal] = useState(false);
@@ -53,6 +63,23 @@ export default function ExperimentInfoForm({
                     {nameError && (
                         <div className="invalid-feedback">
                             The experiment name is required.
+                        </div>
+                    )}
+                </div>
+
+                {/* Project (LAB-EX-01) */}
+                <div className="mb-4">
+                    <label className="form-label" htmlFor="experiment-project">Project</label>
+                    <ProjectSelect
+                        id="experiment-project"
+                        projects={projects}
+                        value={projectId}
+                        onChange={setProjectId}
+                        invalid={projectError}
+                    />
+                    {projectError && (
+                        <div className="invalid-feedback d-block">
+                            The experiment must belong to a project.
                         </div>
                     )}
                 </div>

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Modal, Dropdown, Button } from 'react-bootstrap';
+import { Modal, Button, Form } from 'react-bootstrap';
 import { ExperimentRoleEnum } from '../../../Domain/Laboratory/Entities/Collaborator';
 import './ProjectCollaboration.css';
 import CollaborationMessageModal from './CollaborationMessageModal';
@@ -8,7 +8,7 @@ import { getCollaborators, removeCollaborator, shareExperiment } from "../../../
 import './ProjectCollaboration.css'
 import { ExperimentDetailed, Experiment } from '@domain/Laboratory/Entities/Experiment';
 import ShareDialog from './ShareDialog';
-import { Collaborator } from '../../../Domain/Laboratory/Entities/Collaborator';
+import { Collaborator, SharedAccess } from '../../../Domain/Laboratory/Entities/Collaborator';
 type ProjectCollaborationProps = {
   experiment: ExperimentDetailed;
 };
@@ -54,9 +54,8 @@ export default function ProjectCollaboration({experiment}: ProjectCollaborationP
     setOpenCollaboratorsAfterMessage(false);
   };
 
-  async function handleInviteCollaborator (experiment: Experiment, email: string, role: ExperimentRoleEnum) {
-    console.log(`Inviting ${email} as ${role} to experiment ${experiment.id}`);
-    await shareExperiment(experiment.id, email, role);
+  async function handleInviteCollaborator (experiment: Experiment, email: string, access: SharedAccess) {
+    await shareExperiment(experiment.id, email, access);
     // Refetch collaborators to update the list
     const collaboratorsData = await getCollaborators(experiment.id);
     setCollaborators(collaboratorsData);
@@ -105,7 +104,8 @@ export default function ProjectCollaboration({experiment}: ProjectCollaborationP
     }
   };
 
-  const changeCollaboratorRole = async (experimentId: string, collaboratorEmail: string, newRole: ExperimentRoleEnum) => {
+  // LAB-COL-01: write and execute changed separately
+  const changeCollaboratorAccess = async (experimentId: string, collaborator: Collaborator, access: SharedAccess) => {
 
     const showRoleMessage = (title: string, message: string) => {
         setShowCollaboratorsModal(false);
@@ -116,20 +116,10 @@ export default function ProjectCollaboration({experiment}: ProjectCollaborationP
     };
 
     try {
-      await shareExperiment(experimentId, collaboratorEmail, newRole);
-
-      setCollaborators((prevCollaborators) =>
-        prevCollaborators.map((collab) =>
-          collab.email === collaboratorEmail ? { ...collab, role: newRole } : collab
-        )
-      );
-      setShowCollaboratorsModal(false);
-      setShowMessageModal(true);
-      setMessageModalTitle("Role updated");
-      setMessageModalText(`Collaborator role changed to ${newRole} successfully.`);
-      setOpenCollaboratorsAfterMessage(true);
+      await shareExperiment(experimentId, collaborator.email, access);
+      setCollaborators(await getCollaborators(experimentId));
     } catch (error) {
-      showRoleMessage("Error", "An error occurred while changing the collaborator role. Please try again.");
+      showRoleMessage("Error", "An error occurred while changing the collaborator permissions. Please try again.");
     }
   };
 
@@ -176,41 +166,31 @@ export default function ProjectCollaboration({experiment}: ProjectCollaborationP
                       </span>
                       <br />
                       <span style={{ fontSize: "0.9em", color: "#666" }}>
-                        Current role: {collaborator.role}
+                        {collaborator.role}: {collaborator.permissions
+                          ? ["read", "write", "execute"].filter((p) => (collaborator.permissions as any)[p]).join(", ")
+                          : "read"}
                       </span>
                     </div>
                     <div className="d-flex align-items-center">
-                      {/* Dropdown para cambiar el rol */}
-                      <Dropdown>
-                        <Dropdown.Toggle
-                          variant="secondary"
-                          size="sm"
-                          id={`dropdown-role-${collaborator.id}`}
-                          disabled={
-                            isCurrentUser // Deshabilitar si el colaborador es el usuario actual
-                          }
-                        >
-                          Change Role
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                          <Dropdown.Item
-                            onClick={() =>
-                              changeCollaboratorRole(experiment.id, collaborator.email, ExperimentRoleEnum.EDITOR)
-                            }
-                            disabled={isCurrentUser}
-                          >
-                            Editor
-                          </Dropdown.Item>
-                          <Dropdown.Item
-                            onClick={() =>
-                              changeCollaboratorRole(experiment.id, collaborator.email, ExperimentRoleEnum.VIEWER)
-                            }
-                            disabled={isCurrentUser}
-                          >
-                            Viewer
-                          </Dropdown.Item>
-                        </Dropdown.Menu>
-                      </Dropdown>
+                      {/* LAB-COL-01: owners and directors keep every permission */}
+                      {collaborator.role !== ExperimentRoleEnum.OWNER && collaborator.role !== ExperimentRoleEnum.DIRECTOR && (
+                        <div className="d-flex gap-3" aria-label={`Permissions of ${collaborator.name}`}>
+                          <Form.Check
+                            id={`write-${collaborator.id}`}
+                            label="Write"
+                            checked={!!collaborator.permissions?.write}
+                            disabled={isCurrentUser || !isOwner}
+                            onChange={() => changeCollaboratorAccess(experiment.id, collaborator, { write: !collaborator.permissions?.write, execute: !!collaborator.permissions?.execute })}
+                          />
+                          <Form.Check
+                            id={`execute-${collaborator.id}`}
+                            label="Execute"
+                            checked={!!collaborator.permissions?.execute}
+                            disabled={isCurrentUser || !isOwner}
+                            onChange={() => changeCollaboratorAccess(experiment.id, collaborator, { write: !!collaborator.permissions?.write, execute: !collaborator.permissions?.execute })}
+                          />
+                        </div>
+                      )}
 
                       {/* Botón para eliminar colaborador */}
                       <Button
@@ -247,7 +227,6 @@ export default function ProjectCollaboration({experiment}: ProjectCollaborationP
       </Modal>
     );
   }
-        console.log("ProjectCollaboration component rendered with experiment:", experiment);
 
     return (
       <div className="project-collaboration">

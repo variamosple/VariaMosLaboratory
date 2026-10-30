@@ -8,11 +8,11 @@ import ModelCheckbox from "./ModelCheckbox/ModelCheckbox";
 type EngineeringNodeProps = {
     title: string;
     models: Model[];
-    selectedModel: Model | null;
+    selectedModelIds: string[];
     onToggleModel: (model: Model, checked: boolean) => void;
 };
 
-export default function EngineeringNode({ title, models, selectedModel, onToggleModel }: EngineeringNodeProps) {
+export default function EngineeringNode({ title, models, selectedModelIds, onToggleModel }: EngineeringNodeProps) {
     const [expanded, setExpanded] = useState(false);
 
     if (!models.length) {
@@ -34,7 +34,7 @@ export default function EngineeringNode({ title, models, selectedModel, onToggle
                         <ModelCheckbox
                             key={model.id}
                             model={model}
-                            selected={selectedModel?.id === model.id}
+                            selected={selectedModelIds.includes(model.id)}
                             onToggle={ onToggleModel }
                         />
                     ))}

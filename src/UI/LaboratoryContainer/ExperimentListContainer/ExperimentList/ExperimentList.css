@@ -1,5 +1,6 @@
+/* Fits the 980px list of a usual window; narrower windows scroll the table */
 .experiments-table {
-  min-width: 1000px;
+  min-width: 900px;
 }
 
 .experiments-table th,
@@ -32,9 +33,10 @@
   width: 10%;
 }
 
+/* Five 36px buttons, their gaps and the cell padding: below this the last one is cut off */
 .actions-column {
-  width: 180px;
-  min-width: 180px;
+  width: 220px;
+  min-width: 220px;
 }
 
 .clamped-content {

@@ -80,11 +80,11 @@ export const deleteMetric = async (id: string) => {
 
 /**
  * POST /metrics/publish
+ * Only the author of a private metric can publish it.
  */
-export const publishMetrics = async (metricsToPublish: any[]) => {
+export const publishMetrics = async (metricsToPublish: { id: string }[]) => {
     try {
-        const publishPromises = metricsToPublish.map(metric => updateMetric(metric.id, { userId: null }));
-        await Promise.all(publishPromises);
+        await LABORATORY_CLIENT.post("/metrics/publish", metricsToPublish.map((metric) => metric.id));
     } catch (error) {
         console.error("Error publishing metrics:", error);
         throw error;

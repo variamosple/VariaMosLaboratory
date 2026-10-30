@@ -6,6 +6,7 @@ export default function GroupExperimentsContainerComponent({
   onExperimentClick, 
   loadDataOnInit = true, 
   queryData, 
+  projectId,
   onExperimentEdit}: ExperimentsContainerInitialProps) {
 
   return (
@@ -13,6 +14,7 @@ export default function GroupExperimentsContainerComponent({
       onExperimentClick={onExperimentClick} 
       loadDataOnInit={loadDataOnInit} 
       mode="group" 
+      projectId={projectId}
       queryData={queryData} 
       onExperimentEdit={onExperimentEdit}
     />

@@ -6,6 +6,7 @@ export default function UserExperimentsContainerComponent({
   onExperimentClick, 
   loadDataOnInit = true, 
   queryData, 
+  projectId,
   onExperimentEdit }: ExperimentsContainerInitialProps) {
 
   return (
@@ -14,6 +15,7 @@ export default function UserExperimentsContainerComponent({
         onExperimentClick={onExperimentClick} 
         loadDataOnInit={loadDataOnInit} 
         mode="user" 
+        projectId={projectId}
         queryData={queryData}
         onExperimentEdit={onExperimentEdit}
       />

@@ -88,7 +88,16 @@ export default function ExperimentsList({
               {(mode !== "template") && (
                 <td>{experiment.status}</td>
               )}
-              <td>{experiment.name}</td>
+              <td>
+                {experiment.name}
+                {/* LAB-EX-02: a clone shows where it comes from */}
+                {experiment.clonedFrom && (
+                  <div className="small text-muted">
+                    Copy of {experiment.clonedFrom.name ? `“${experiment.clonedFrom.name}”` : "another experiment"}
+                    {experiment.clonedFrom.version !== null && ` (version ${experiment.clonedFrom.version})`}
+                  </div>
+                )}
+              </td>
 
               <td>
                 <div className="clamped-content">
@@ -109,12 +118,12 @@ export default function ExperimentsList({
               </td>
 
               {(mode === "shared" || mode === "group") && (
-                <td>{experiment.userRole}</td>
+                <td>{experiment.ownerName ?? "—"}</td>
               )}
               {mode !== "template" && (       
               <td className="actions-column">
                 <div className="actions-container">
-                  {experiment.userRole !== ExperimentRoleEnum.VIEWER && (
+                  {(experiment.permissions?.write ?? experiment.userRole !== ExperimentRoleEnum.VIEWER) && (
                   <Button 
                     variant="primary"
                     size="sm"
@@ -133,6 +142,7 @@ export default function ExperimentsList({
                   <Button
                     variant="primary"
                     size="sm"
+                    title="Copy experiment"
                     onClick={(e) =>
                       handleButtonClick(
                         e,

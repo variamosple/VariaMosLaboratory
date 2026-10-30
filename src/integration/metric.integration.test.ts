@@ -55,17 +55,16 @@ describe("front-back metrics contract", () => {
     const updated = { ...metric, name: "Updated accuracy" };
     http.onPost("/metrics", metric).reply(201, created);
     http.onPut("/metrics/metric-1", updated).reply(200, updated);
-    http.onPut("/metrics/metric-1", { userId: null }).reply(200, {
-      ...updated,
-      userId: null,
+    http.onPost("/metrics/publish", ["metric-1"]).reply(200, {
+      message: "Metrics published successfully",
     });
 
     await expect(createMetric(metric)).resolves.toEqual(created);
     await expect(updateMetric("metric-1", updated)).resolves.toEqual(updated);
     await expect(publishMetrics([{ id: "metric-1" }])).resolves.toBeUndefined();
 
-    expect(http.history.post).toHaveLength(1);
-    expect(http.history.put).toHaveLength(2);
-    expect(http.history.put[1].data).toBe(JSON.stringify({ userId: null }));
+    expect(http.history.post).toHaveLength(2);
+    expect(http.history.post[1].url).toBe("/metrics/publish");
+    expect(http.history.put).toHaveLength(1);
   });
 });

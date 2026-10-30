@@ -23,6 +23,8 @@ export interface ExperimentsContainerInitialProps {
   mode: "user" | "shared" | "group" | "archived";
   experimentSelected?: Experiment | null;
   onExperimentSelect?: (experiment: Experiment) => void;
+  /** LAB-EX-01: only the experiments of this project; all projects when empty. */
+  projectId?: string;
   queryData: {
     data: Experiment[];
     loadData: (filter: ExperimentFilter) => void;

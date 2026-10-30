@@ -1,5 +1,5 @@
-import { Modal, Dropdown, Form, FormGroup } from 'react-bootstrap';
-import { ExperimentRoleEnum } from '../../../Domain/Laboratory/Entities/Collaborator';
+import { Modal, Form } from 'react-bootstrap';
+import { SharedAccess } from '../../../Domain/Laboratory/Entities/Collaborator';
 import { useState } from 'react';
 import { Experiment } from '../../../Domain/Laboratory/Entities/Experiment';
 
@@ -7,17 +7,18 @@ type ShareDialogProps = {
     show: boolean;
     onHide: () => void;
     experiment: Experiment;
-    onShareExperiment: (experiment: Experiment, email: string, role: ExperimentRoleEnum) => void;
+    onShareExperiment: (experiment: Experiment, email: string, access: SharedAccess) => void;
 }
 
+/** LAB-COL-01: share with read, and with write and execute chosen separately. */
 export default function ShareDialog({ show, onHide, experiment, onShareExperiment }: ShareDialogProps) {
     const [shareInput, setShareInput] = useState('');
-    const [shareRole, setShareRole] = useState(ExperimentRoleEnum.VIEWER);
+    const [access, setAccess] = useState<SharedAccess>({ write: false, execute: false });
 
     const handleInviteCollaborator = () => {
-        onShareExperiment(experiment, shareInput, shareRole);
+        onShareExperiment(experiment, shareInput, access);
         setShareInput('');
-        setShareRole(ExperimentRoleEnum.VIEWER);
+        setAccess({ write: false, execute: false });
         onHide();
     };
 
@@ -28,42 +29,28 @@ export default function ShareDialog({ show, onHide, experiment, onShareExperimen
             </Modal.Header>
             <Modal.Body>
                 <Form>
-                    <FormGroup controlId="shareInput">
-                        <label>User Email</label>
-                            <FormGroup>
-                                <input type="email"
-                                    className="form-control"
-                                    placeholder="Enter User Email"
-                                    value={shareInput}
-                                    onChange={(e) => setShareInput(e.target.value)}
-                                />
-                        </FormGroup>
-                    </FormGroup>
-                    <FormGroup controlId="shareRole">
-                        <label>User Role</label>
-                        <FormGroup>
-                            <Dropdown>
-                                <Dropdown.Toggle variant="outline-secondary"  id="dropdown-basic">
-                                    {shareRole}
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu>
-                                    <Dropdown.Item onClick={() => setShareRole(ExperimentRoleEnum.VIEWER)}>
-                                        {ExperimentRoleEnum.VIEWER}
-                                    </Dropdown.Item>
-                                    <Dropdown.Item onClick={() => setShareRole(ExperimentRoleEnum.EDITOR)}>
-                                        {ExperimentRoleEnum.EDITOR}
-                                    </Dropdown.Item>
-                                </Dropdown.Menu>
-                            </Dropdown>
-                        </FormGroup>
-                    </FormGroup>
+                    <Form.Group controlId="shareInput" className="mb-3">
+                        <Form.Label>User Email</Form.Label>
+                        <Form.Control
+                            type="email"
+                            placeholder="Enter User Email"
+                            value={shareInput}
+                            onChange={(e) => setShareInput(e.target.value)}
+                        />
+                    </Form.Group>
+                    <fieldset>
+                        <legend className="form-label fs-6">Permissions</legend>
+                        <Form.Check id="share-read" label="Read: see the experiment, its runs and results, and comment" checked disabled />
+                        <Form.Check id="share-write" label="Write: edit the configuration and mark it Ready" checked={access.write} onChange={() => setAccess({ ...access, write: !access.write })} />
+                        <Form.Check id="share-execute" label="Execute: start and cancel runs" checked={access.execute} onChange={() => setAccess({ ...access, execute: !access.execute })} />
+                    </fieldset>
                 </Form>
             </Modal.Body>
             <Modal.Footer>
-                <button  className="btn btn-secondary"  onClick={onHide}>
+                <button className="btn btn-secondary" onClick={onHide}>
                     Cancel
                 </button>
-                <button className="btn btn-primary"  onClick={handleInviteCollaborator}>
+                <button className="btn btn-primary" onClick={handleInviteCollaborator} disabled={!shareInput.trim()}>
                     Invite
                 </button>
             </Modal.Footer>

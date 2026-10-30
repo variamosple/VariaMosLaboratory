@@ -13,6 +13,7 @@ import {
   getTemplateBenchmarks,
   getTemplateExperiments,
   getUserExperiments,
+  markExperimentReady,
   publishAsBenchmark,
   publishAsTemplate,
   removeCollaborator,
@@ -85,9 +86,17 @@ describe("experiment service", () => {
     await expect(deleteExperiment("experiment-1")).resolves.toBe(response);
 
     expect(post).toHaveBeenCalledWith("/experiments", experiment);
-    expect(post).toHaveBeenCalledWith("/experiments/experiment-1/copy");
+    expect(post).toHaveBeenCalledWith("/experiments/experiment-1/copy", {});
     expect(put).toHaveBeenCalledWith("/experiments/experiment-1", experiment);
     expect(remove).toHaveBeenCalledWith("/experiments/experiment-1");
+  });
+
+  test("copies an experiment into a chosen project (LAB-EX-01)", async () => {
+    const post = jest.spyOn(LABORATORY_CLIENT, "post").mockResolvedValue({ data: {} } as any);
+
+    await copyExperiment("experiment-1", "project-1");
+
+    expect(post).toHaveBeenCalledWith("/experiments/experiment-1/copy", { projectId: "project-1" });
   });
 
   test("archives, restores, and publishes an experiment", async () => {
@@ -104,6 +113,19 @@ describe("experiment service", () => {
     expect(put).toHaveBeenNthCalledWith(2, "/experiments/experiment-1/restore");
     expect(post).toHaveBeenNthCalledWith(1, "/experiments/experiment-1/publish/template");
     expect(post).toHaveBeenNthCalledWith(2, "/experiments/experiment-1/publish/benchmark");
+  });
+
+  test("marks an experiment Ready and passes the backend problems on", async () => {
+    const put = jest.spyOn(LABORATORY_CLIENT, "put")
+      .mockResolvedValueOnce({ data: { id: "experiment-1", status: "ready" } } as any)
+      .mockRejectedValueOnce({ response: { status: 400, data: { details: ["Add at least one scenario."] } } });
+    jest.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await expect(markExperimentReady("experiment-1")).resolves.toEqual({ id: "experiment-1", status: "ready" });
+    await expect(markExperimentReady("experiment-1")).rejects.toMatchObject({
+      response: { data: { details: ["Add at least one scenario."] } },
+    });
+    expect(put).toHaveBeenCalledWith("/experiments/experiment-1/ready");
   });
 
   test("shares an experiment with a collaborator", async () => {
@@ -149,5 +171,26 @@ describe("experiment service", () => {
     jest.spyOn(LABORATORY_CLIENT, "get").mockRejectedValue(error);
 
     await expect(getExperimentDetailed("experiment-1")).rejects.toBe(error);
+  });
+});
+describe("sharing and filters (LAB-COL-01, LAB-COL-04)", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  test("write and execute are sent separately; a role is still accepted", async () => {
+    const post = jest.spyOn(LABORATORY_CLIENT, "post").mockResolvedValue({ data: true } as any);
+
+    await shareExperiment("e1", "eli@example.org", { write: false, execute: true });
+    await shareExperiment("e1", "eli@example.org", ExperimentRoleEnum.VIEWER);
+
+    expect(post).toHaveBeenNthCalledWith(1, "/experiments/e1/share", { userEmail: "eli@example.org", permissions: { write: false, execute: true } });
+    expect(post).toHaveBeenNthCalledWith(2, "/experiments/e1/share", { userEmail: "eli@example.org", role: "viewer" });
+  });
+
+  test("only the filters set are sent", async () => {
+    const get = jest.spyOn(LABORATORY_CLIENT, "get").mockResolvedValue({ data: { data: [] } } as any);
+
+    await getUserExperiments({ pageNumber: 1, pageSize: 10, status: "ready", researcher: "Dana", type: undefined } as any);
+
+    expect(get).toHaveBeenCalledWith("/experiments", { params: { userId: undefined, name: undefined, pageNumber: 1, pageSize: 10, researcher: "Dana", status: "ready" } });
   });
 });

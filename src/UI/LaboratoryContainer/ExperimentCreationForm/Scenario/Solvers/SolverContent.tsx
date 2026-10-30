@@ -1,31 +1,52 @@
-
-import { createSolverConfig, SolverConfigs, SolverType } from "../../../../../Domain/Laboratory/Entities/SolverConfig";
-import { Tab, Tabs } from "react-bootstrap";
-import MinizincConfigForm from "./SolversConfigForm/MinizincConfigForm";
-import SwiPrologConfigForm from "./SolversConfigForm/SwiPrologConfigForm";
-import Z3ConfigForm from "./SolversConfigForm/Z3ConfigForm";
-import { useState } from "react";
+import { defaultSolverSettings, SolverConfigs, SolverDescriptor } from "../../../../../Domain/Laboratory/Entities/SolverConfig";
+import { Alert, Button, Spinner, Tab, Tabs } from "react-bootstrap";
+import SolverSettingsForm from "./SolverSettingsForm";
+import { useEffect, useState } from "react";
+import { getSolvers } from "../../../../../DataProvider/Services/catalogService";
+import { errorMessage } from "../../../../errorMessage";
 
 type SolverContentProps = {
     solverConfigs : SolverConfigs;
     setSolverConfigs: React.Dispatch<React.SetStateAction<SolverConfigs>>;
+    /** Ids must differ between scenarios: every scenario pane stays in the page. */
+    idPrefix: string;
 };
 
-export default function SolverContent({ solverConfigs, setSolverConfigs }: SolverContentProps) {
+/** Solvers come from the Reasoning module catalog, with their versions and parameters (LAB-CF-02). */
+export default function SolverContent({ solverConfigs, setSolverConfigs, idPrefix }: SolverContentProps) {
+    const [catalog, setCatalog] = useState<SolverDescriptor[] | null>(null);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<string>(Object.keys(solverConfigs)[0] || "");
 
-    const toggleSolver = (solver: SolverType) => {
+    useEffect(() => {
+        getSolvers()
+            .then(setCatalog)
+            .catch((error) => setLoadError(errorMessage(error, "The solver catalog could not be loaded.")));
+    }, []);
+
+    const toggleSolver = (solver: SolverDescriptor) => {
         setSolverConfigs(prev => {
-            if (prev[solver]) {
+            if (prev[solver.id]) {
                 const updatedConfig = { ...prev };
-                delete updatedConfig[solver];
+                delete updatedConfig[solver.id];
                 setActiveTab(Object.keys(updatedConfig)[0] || "");
                 return updatedConfig;
             }
-            setActiveTab(solver);
-            return { ...prev, [solver]: createSolverConfig(solver) };
+            setActiveTab(solver.id);
+            return { ...prev, [solver.id]: defaultSolverSettings(solver) };
         });
     };
+
+    if (loadError) {
+        return <Alert variant="danger">{loadError}</Alert>;
+    }
+
+    if (!catalog) {
+        return <Spinner animation="border" size="sm" />;
+    }
+
+    const unknownSolvers = Object.keys(solverConfigs).filter((id) => !catalog.some((solver) => solver.id === id));
+    const selected = catalog.filter((solver) => solverConfigs[solver.id]);
 
     return (
     <>
@@ -35,52 +56,56 @@ export default function SolverContent({ solverConfigs, setSolverConfigs }: Solve
             </label>
 
             <div className="d-flex gap-4 flex-wrap">
-                <div className="form-check d-flex align-items-center">
-                    <input className="form-check-input" type="checkbox" onChange={() => toggleSolver(SolverType.Minizinc)} id="minizinc"/>
-                    <label className="form-check-label ms-2" htmlFor="minizinc">
-                        Minizinc (Gecode)
-                    </label>
-                </div>
-
-                <div className="form-check d-flex align-items-center">
-                    <input className="form-check-input" type="checkbox" onChange={() => toggleSolver(SolverType.SwiProlog)} id="swi-prolog"/>
-                    <label className="form-check-label ms-2" htmlFor="swi-prolog">
-                        SWI-Prolog CLP(FD)
-                    </label>
-                </div>
-
-                <div className="form-check d-flex align-items-center">
-                    <input className="form-check-input" type="checkbox" onChange={() => toggleSolver(SolverType.Z3)} id="z3"/>
-                    <label className="form-check-label ms-2" htmlFor="z3">
-                        Microsoft Z3
-                    </label>
-                </div>
+                {catalog.map((solver) => (
+                    <div className="form-check d-flex align-items-center" key={solver.id}>
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id={`${idPrefix}-solver-${solver.id}`}
+                            checked={!!solverConfigs[solver.id]}
+                            onChange={() => toggleSolver(solver)}
+                        />
+                        <label className="form-check-label ms-2" htmlFor={`${idPrefix}-solver-${solver.id}`}>
+                            {solver.name}
+                        </label>
+                    </div>
+                ))}
             </div>
+
+            {unknownSolvers.length > 0 && (
+                <Alert variant="warning" className="small mt-2 mb-0 d-flex justify-content-between align-items-center">
+                    <span>No longer offered by the Reasoning module: {unknownSolvers.join(", ")}.</span>
+                    <Button
+                        size="sm"
+                        variant="outline-secondary"
+                        onClick={() => setSolverConfigs(prev =>
+                            Object.fromEntries(Object.entries(prev).filter(([id]) => !unknownSolvers.includes(id)))
+                        )}
+                    >
+                        Remove
+                    </Button>
+                </Alert>
+            )}
         </div>
 
         {/* Solver configuration */}
-        {Object.keys(solverConfigs).length > 0 && (
+        {selected.length > 0 && (
             <div className="mb-4">
                 <label className="form-label">
                     Solver Configuration
                 </label>
 
-                <Tabs activeKey={activeTab} id="solver-config-tabs" className="mb-3" onSelect={(k) => k && setActiveTab(k)}>
-                    {solverConfigs[SolverType.Minizinc] && (
-                        <Tab eventKey={SolverType.Minizinc} title="Minizinc">
-                            <MinizincConfigForm solverConfigs={solverConfigs} setSolverConfigs={setSolverConfigs} />
+                <Tabs activeKey={activeTab} id={`${idPrefix}-solver-config-tabs`} className="mb-3" onSelect={(k) => k && setActiveTab(k)}>
+                    {selected.map((solver) => (
+                        <Tab eventKey={solver.id} title={solver.name} key={solver.id}>
+                            <SolverSettingsForm
+                                idPrefix={idPrefix}
+                                solver={solver}
+                                settings={solverConfigs[solver.id]}
+                                onChange={(settings) => setSolverConfigs(prev => ({ ...prev, [solver.id]: settings }))}
+                            />
                         </Tab>
-                    )}
-                    {solverConfigs[SolverType.SwiProlog] && (
-                        <Tab eventKey={SolverType.SwiProlog} title="SWI-Prolog">
-                            <SwiPrologConfigForm solverConfigs={solverConfigs} setSolverConfigs={setSolverConfigs} />
-                        </Tab>
-                    )}
-                    {solverConfigs[SolverType.Z3] && (
-                        <Tab eventKey={SolverType.Z3} title="Microsoft Z3">
-                            <Z3ConfigForm solverConfigs={solverConfigs} setSolverConfigs={setSolverConfigs} />
-                        </Tab>
-                    )}
+                    ))}
                 </Tabs>
             </div>
         )}

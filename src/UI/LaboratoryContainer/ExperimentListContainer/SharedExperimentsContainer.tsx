@@ -8,6 +8,7 @@ export default function SharedExperimentsContainerComponent({
   onExperimentClick, 
   loadDataOnInit = true, 
   queryData, 
+  projectId,
   onExperimentEdit}: ExperimentsContainerInitialProps) {
 
   return (
@@ -15,6 +16,7 @@ export default function SharedExperimentsContainerComponent({
       onExperimentClick={onExperimentClick} 
       loadDataOnInit={loadDataOnInit} 
       mode="shared" 
+      projectId={projectId}
       queryData={queryData}
       onExperimentEdit={onExperimentEdit} 
     />

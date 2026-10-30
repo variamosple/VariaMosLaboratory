@@ -2,6 +2,18 @@ import { Metric } from "./Metric";
 import { Scenario } from "./Scenario";
 import { ExperimentRoleEnum } from "./Collaborator";
 
+/** LAB-EX-07 states, plus 'request_changes' from LAB-EX-03. */
+export type ExperimentStatus =
+    | "draft"
+    | "request_changes"
+    | "ready"
+    | "running"
+    | "completed"
+    | "failed"
+    | "cancelled"
+    | "archived"
+    | "deleted";
+
 export class Experiment {
     id: string;
     name: string;
@@ -12,9 +24,19 @@ export class Experiment {
     createdAt: string;
     updatedAt: string;
     labels?: string[];
-    status?: "draft" | "ready" | "archived" | "deleted" | "running" | "completed" | "failed";
+    status?: ExperimentStatus;
     isTemplate?: boolean;
     isBenchmark?: boolean;
+    /** LAB-EX-01: the VariaMos project; null for experiments created before projects were recorded. */
+    projectId?: string | null;
+    /** LAB-EX-02: the experiment and version this one was cloned from; the name when the user can read it. */
+    clonedFrom?: { experimentId: string; version: number | null; name?: string | null };
+    /** LAB-RP-01: the run, by persistent id, whose package rebuilt this experiment. */
+    reproducedFrom?: string | null;
+    /** LAB-COL-01: what the user may do. */
+    permissions?: { read: boolean; write: boolean; execute: boolean; manage: boolean };
+    /** LAB-COL-04: the researcher who created it. */
+    ownerName?: string | null;
 
     constructor(
         id: string, 

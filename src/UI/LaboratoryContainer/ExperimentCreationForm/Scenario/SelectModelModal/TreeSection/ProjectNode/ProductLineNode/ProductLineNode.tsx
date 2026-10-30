@@ -8,11 +8,11 @@ import EngineeringNode from "./EngineeringNode/EngineeringNode";
 
 type ProductLineNodeProps = {
     productLine: ProductLine;
-    selectedModel: Model | null;
+    selectedModelIds: string[];
     onToggleModel: (model: Model, checked: boolean) => void;
 };
 
-export default function ProductLineNode({ productLine, selectedModel, onToggleModel }: ProductLineNodeProps) {
+export default function ProductLineNode({ productLine, selectedModelIds, onToggleModel }: ProductLineNodeProps) {
     const [expanded, setExpanded] = useState(false);
 
     const hasModels = productLine.domainEngineering?.models.length > 0 ||
@@ -36,14 +36,14 @@ export default function ProductLineNode({ productLine, selectedModel, onToggleMo
                     <EngineeringNode
                         title="Domain Engineering"
                         models={ productLine.domainEngineering.models}
-                        selectedModel={ selectedModel}
+                        selectedModelIds={selectedModelIds}
                         onToggleModel={ onToggleModel }
                     />
 
                     <EngineeringNode
                         title="Application Engineering"
                         models={productLine.applicationEngineering.models}
-                        selectedModel={ selectedModel }
+                        selectedModelIds={selectedModelIds}
                         onToggleModel={onToggleModel}
                     />
                 </div>

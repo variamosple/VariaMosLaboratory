@@ -1,63 +1,34 @@
-// We should import dynamically solvers and config from backend, but for now we hardcode the 3 existing
-
-export enum SolverType {
-  Minizinc = "minizinc",
-  SwiProlog = "swi-prolog",
-  Z3 = "z3",
+/**
+ * Solvers come from the Reasoning module (GET /catalog/solvers), not from the
+ * interface: their versions and parameters are described by the catalog (LAB-CF-02).
+ */
+export interface SolverParameter {
+  name: string;
+  label: string;
+  type: "integer" | "enum";
+  default: number | string;
+  description?: string;
+  min?: number;
+  max?: number;
+  options?: { value: string; label: string; description?: string }[];
 }
 
-export interface SolverConfig {
-  timeOut: number;
-  randomSeed: number;
+export interface SolverDescriptor {
+  id: string;
+  name: string;
+  /** Newest first. An experiment always pins one (LAB-R-03). */
+  versions: string[];
+  parameters: SolverParameter[];
 }
 
-export interface MinizincConfig extends SolverConfig {
-  variableSelection?: "default" | "first_fail" | "most_constrained";
-  valueSelection?: "default" | "min_first" | "max_first" | "split_domain";
-}
+/** The pinned version and the parameter values of one solver in a scenario. */
+export type SolverSettings = { version?: string } & Record<string, string | number | undefined>;
 
-export interface SwiConfig extends SolverConfig {
-  variableSelection?: "default" | "ff" | "ffc";
-  valueSelection?: "default" | "up" | "down" | "bisect";
-}
+/** Settings of each selected solver, keyed by solver id. */
+export type SolverConfigs = Record<string, SolverSettings>;
 
-export interface SolverConfigs {
-  [SolverType.Minizinc]?: MinizincConfig;
-  [SolverType.SwiProlog]?: SwiConfig;
-  [SolverType.Z3]?: SolverConfig;
-}
-
-export const createMinizincConfig = (overrides: Partial<MinizincConfig> = {}): MinizincConfig => ({
-  timeOut: 60,
-  randomSeed: 42,
-  variableSelection: "default",
-  valueSelection: "default",
-  ...overrides,
+/** Newest version and default value of every parameter. */
+export const defaultSolverSettings = (solver: SolverDescriptor): SolverSettings => ({
+  version: solver.versions[0],
+  ...Object.fromEntries(solver.parameters.map((parameter) => [parameter.name, parameter.default])),
 });
-
-export const createSwiConfig = (overrides: Partial<SwiConfig> = {}): SwiConfig => ({
-  timeOut: 60,
-  randomSeed: 42,
-  variableSelection: "default",
-  valueSelection: "default",
-  ...overrides,
-});
-
-export const createZ3Config = (overrides: Partial<SolverConfig> = {}): SolverConfig => ({
-  timeOut: 60,
-  randomSeed: 42,
-  ...overrides,
-});
-
-export const createSolverConfig = (solver: SolverType): MinizincConfig | SwiConfig | SolverConfig => {
-  switch (solver) {
-    case SolverType.Minizinc:
-      return createMinizincConfig();
-
-    case SolverType.SwiProlog:
-      return createSwiConfig();
-
-    case SolverType.Z3:
-      return createZ3Config();
-  }
-};

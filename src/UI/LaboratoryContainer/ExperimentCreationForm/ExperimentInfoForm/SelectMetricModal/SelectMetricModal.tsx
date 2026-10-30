@@ -6,6 +6,8 @@ import MetricCard from "./MetricCard/MetricCard";
 import "./SelectMetricModal.css";
 import CreateMetricForm from "./CreateMetricForm/CreateMetricForm";
 import ConfirmationModal from "../../../../ConfirmationModal/ConfirmationModal";
+import * as alertify from "alertifyjs";
+import { errorMessage } from "../../../../errorMessage";
 import { getPublicMetrics, getUserMetrics, updateMetric, createMetric, deleteMetric, publishMetrics } from "../../../../../DataProvider/Services/metricService";
 
 interface SelectMetricModalProps {
@@ -66,15 +68,24 @@ export default function SelectMetricModal({ show, onClose, setSelectedMetrics, s
     }, [show, hasLoadedMetrics]);
 
     const toggleMetric = (metric: Metric, checked: boolean ) => {
-        setSelectedMetricsState((prev) => checked ? [...prev, metric] : prev.filter((m) => m.id !== metric.id));
+        // Selecting twice must not count a metric twice
+        setSelectedMetricsState((prev) => checked
+            ? (prev.some((m) => m.id === metric.id) ? prev : [...prev, metric])
+            : prev.filter((m) => m.id !== metric.id));
     };
 
     const onCreate = async (newMetric: Metric) => {
-        await createMetric(newMetric);
-        setSelectedMetricsState((prev) => [...prev, newMetric]);
-        setCustomMetrics((prev) => [...prev, newMetric]);
+        // The server gives the metric its id: only the metric it returns can be selected
+        let created: Metric;
+        try {
+            created = await createMetric(newMetric);
+        } catch (error) {
+            alertify.error(errorMessage(error, "The metric could not be created."));
+            return;
+        }
+        setCustomMetrics((prev) => [...prev, created]);
         setActiveTab("CustomMetrics");
-        toggleMetric(newMetric, true);
+        toggleMetric(created, true);
     }
 
     return (

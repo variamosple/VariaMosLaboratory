@@ -4,7 +4,7 @@ import { ResponseModel } from "@variamosple/variamos-components";
 import { Experiment, ExperimentDetailed } from "@domain/Laboratory/Entities/Experiment";
 import { ExperimentRoleEnum } from "@domain/Laboratory/Entities/Collaborator";
 import { ExperimentHistory } from "@domain/Laboratory/Entities/ExperimentHistory";
-import { Collaborator } from "@domain/Laboratory/Entities/Collaborator";
+import { Collaborator, SharedAccess } from "@domain/Laboratory/Entities/Collaborator";
 
 const buildParams = (filter?: ExperimentFilter) => {
   if (!filter) return {};
@@ -14,6 +14,14 @@ const buildParams = (filter?: ExperimentFilter) => {
     name: filter.name,
     pageNumber: filter.pageNumber,
     pageSize: filter.pageSize,
+    // LAB-EX-01: only sent when a project is selected
+    ...(filter.projectId ? { projectId: filter.projectId } : {}),
+    // LAB-COL-04: only the filters set
+    ...Object.fromEntries(
+      (["researcher", "status", "createdFrom", "createdTo", "type"] as const)
+        .filter((key) => filter[key])
+        .map((key) => [key, filter[key]])
+    ),
   };
 };
 
@@ -188,11 +196,14 @@ export const restoreExperiment = async (
  * POST /experiments/{experimentId}/copy
  */
 export const copyExperiment = async (
-  experimentId: string
+  experimentId: string,
+  projectId?: string
 ): Promise<ResponseModel<ExperimentDetailed>> => {
   try {
+    // Without a project, the copy goes to the project of the original (LAB-EX-01)
     const response = await LABORATORY_CLIENT.post(
-      `/experiments/${experimentId}/copy`
+      `/experiments/${experimentId}/copy`,
+      projectId ? { projectId } : {}
     );
 
     return response.data;
@@ -208,15 +219,13 @@ export const copyExperiment = async (
 export const shareExperiment = async (
   experimentId: string,
   userEmail: string,
-  role: ExperimentRoleEnum
+  access: ExperimentRoleEnum | SharedAccess
 ): Promise<ResponseModel<any>> => {
   try {
+    // LAB-COL-01: write and execute given separately, or a role
     const response = await LABORATORY_CLIENT.post(
       `/experiments/${experimentId}/share`,
-      {
-        userEmail,
-        role,
-      }
+      typeof access === "string" ? { userEmail, role: access } : { userEmail, permissions: access }
     );
 
     return response.data;
@@ -231,7 +240,7 @@ export const shareExperiment = async (
  */
 export const createExperiment = async (
   experimentData: any
-): Promise<ResponseModel<ExperimentDetailed>> => {
+): Promise<ExperimentDetailed> => {
   try {
     const response = await LABORATORY_CLIENT.post(
       "/experiments",
@@ -250,7 +259,7 @@ export const createExperiment = async (
  */
 export const updateExperiment = async (
   experimentData: ExperimentDetailed
-): Promise<ResponseModel<ExperimentDetailed>> => {
+): Promise<ExperimentDetailed> => {
   try {
     const response = await LABORATORY_CLIENT.put(
       `/experiments/${experimentData.id}`,
@@ -265,11 +274,30 @@ export const updateExperiment = async (
 };
 
 /**
+ * PUT /experiments/{experimentId}/ready
+ * LAB-EX-07: Draft -> Ready. A 400 lists the problems in `details`.
+ */
+export const markExperimentReady = async (
+  experimentId: string
+): Promise<ExperimentDetailed> => {
+  try {
+    const response = await LABORATORY_CLIENT.put(
+      `/experiments/${experimentId}/ready`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error marking experiment ready:", error);
+    throw error;
+  }
+};
+
+/**
  * DELETE /experiments/{experimentId}
+ * Logical deletion; an experiment with completed executions is archived instead.
  */
 export const deleteExperiment = async (
   experimentId: string
-): Promise<ResponseModel<any>> => {
+): Promise<{ result: "deleted" | "archived"; message: string }> => {
   try {
     const response = await LABORATORY_CLIENT.delete(
       `/experiments/${experimentId}`

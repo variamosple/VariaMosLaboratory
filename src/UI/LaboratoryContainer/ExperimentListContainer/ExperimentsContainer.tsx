@@ -4,16 +4,18 @@ import {
 import { useEffect } from "react";
 import { Spinner } from "react-bootstrap";
 import { SearchForm } from "../../SearchForm";
+import ListFilters, { ListFilterValues } from "./ListFilters";
 import ExperimentList  from "./ExperimentList/ExperimentList";
 import {ExperimentsContainerProps} from "../LaboratoryContainer.types";
 import { ExperimentFilter } from "../../../Domain/Laboratory/Entities/ExperimentFilter";
 import { useState } from "react";
 import * as alertify from "alertifyjs";
 import { deleteExperiment, archiveExperiment, copyExperiment, shareExperiment, restoreExperiment } from "../../../DataProvider/Services/experimentService";
+import { errorMessage } from "../../errorMessage";
 import { Experiment } from "@domain/Laboratory/Entities/Experiment";
 import ConfirmationModal from "../../ConfirmationModal/ConfirmationModal";
 import ShareDialog from "../../Collaboration/Components/ShareDialog";
-import { ExperimentRoleEnum } from "@domain/Laboratory/Entities/Collaborator";
+import { SharedAccess } from "@domain/Laboratory/Entities/Collaborator";
 
 type ModalAction = "delete" | "archive" | "copy" | "restore" | null;
 
@@ -26,7 +28,8 @@ export default function ExperimentsContainerComponent({
   onExperimentSelect, 
   onExperimentRestored, 
   handleExperimentCopy,
-  onExperimentEdit
+  onExperimentEdit,
+  projectId
  }: ExperimentsContainerProps) {
   
   const {
@@ -39,8 +42,11 @@ export default function ExperimentsContainerComponent({
       filter: experimentsFilter,
   } = queryData;
 
+  // LAB-EX-01: every list query keeps the selected project
+  const projectFilter = () => Object.assign(new ExperimentFilter(), { projectId: projectId || undefined });
+
   const onReset = () => {
-    loadExperiments(new ExperimentFilter());
+    loadExperiments(projectFilter());
   };
 
   const onSubmit = (name: string) => {
@@ -50,6 +56,7 @@ export default function ExperimentsContainerComponent({
         {
           ...experimentsFilter,
           name,
+          projectId: projectId || undefined,
           pageNumber: 1,
         }
       )
@@ -58,10 +65,9 @@ export default function ExperimentsContainerComponent({
 
   useEffect(() => {
     if (loadDataOnInit) {
-      loadExperiments(new ExperimentFilter());
+      loadExperiments(Object.assign(new ExperimentFilter(), { projectId: projectId || undefined }));
     }
-  }, [loadDataOnInit, loadExperiments]);
-  console.log("experiments", experiments);
+  }, [loadDataOnInit, loadExperiments, projectId]);
   const [modalAction, setModalAction] = useState<ModalAction>(null);
   const [selectedExperiment, setSelectedExperiment] = useState<Experiment | null>(null);
   const [sharingExperiment, setSharingExperiment] = useState(false);
@@ -69,15 +75,21 @@ export default function ExperimentsContainerComponent({
   const onDeleteExperiment = (experiment: Experiment) => {
     alertify.notify("Deleting experiment...", "info");
   
-    deleteExperiment(experiment.id).then((response) => {
-      if (response.errorCode) {
-        alertify.error("Error when trying to delete the experiment");
-      } else {
+    deleteExperiment(experiment.id)
+      .then((response) => {
         alertify.dismissAll();
-        alertify.success("Experiment deleted successfully");
+        // An experiment with completed executions is archived instead of deleted (LAB-EX-05)
+        if (response.result === "archived") {
+          alertify.warning(response.message);
+        } else {
+          alertify.success("Experiment deleted successfully");
+        }
         queryData.onPageChange(queryData.currentPage);
-      }
-    });
+      })
+      .catch((error) => {
+        alertify.dismissAll();
+        alertify.error(errorMessage(error, "Error when trying to delete the experiment"));
+      });
   };
   
   const onArchiveExperiment = (experiment: Experiment) => {
@@ -85,15 +97,16 @@ export default function ExperimentsContainerComponent({
 
     alertify.notify("Archiving experiment...", "info");
 
-    archiveExperiment(id).then((response) => {
-      if (response.errorCode) {
-        alertify.error("Error when trying to archive the experiment");
-      } else {
+    archiveExperiment(id)
+      .then(() => {
         alertify.dismissAll();
         alertify.success("Experiment archived successfully");
         queryData.onPageChange(queryData.currentPage);
-      }
-    });
+      })
+      .catch((error) => {
+        alertify.dismissAll();
+        alertify.error(errorMessage(error, "Error when trying to archive the experiment"));
+      });
   };
   
   const onCopyExperiment = (experiment: Experiment) => {
@@ -101,43 +114,46 @@ export default function ExperimentsContainerComponent({
 
     alertify.notify("Copying experiment...", "info");
 
-    copyExperiment(id).then((response) => {
-      if (response.errorCode) {
-        alertify.error("Error when trying to copy the experiment");
-      } else {
+    copyExperiment(id, projectId || undefined)
+      .then(() => {
         alertify.dismissAll();
         alertify.success("Experiment copied successfully");
         if (handleExperimentCopy) {
             handleExperimentCopy(experiment);
         } else {
             queryData.onPageChange(queryData.currentPage);
-        }        
-      }
-    });
+        }
+      })
+      .catch((error) => {
+        alertify.dismissAll();
+        alertify.error(errorMessage(error, "Error when trying to copy the experiment"));
+      });
   };
 
-  const onShareExperiment = (experiment: Experiment, email: string, role: ExperimentRoleEnum) => {
+  const onShareExperiment = (experiment: Experiment, email: string, access: SharedAccess) => {
     const { id } = experiment || {};
 
     alertify.notify("Sharing experiment...", "info");
 
-    shareExperiment(id, email, role).then((response) => {
-      if (response.errorCode) {
-        alertify.error("Error when trying to share the experiment");
-      } else {
+    shareExperiment(id, email, access)
+      .then(() => {
         alertify.dismissAll();
         alertify.success("Experiment shared successfully");
         queryData.onPageChange(queryData.currentPage);
-      }
-    });
+      })
+      .catch((error) => {
+        alertify.dismissAll();
+        alertify.error(errorMessage(error, "Error when trying to share the experiment"));
+      });
   };
   
   const onRestoreExperiment = async (experiment: Experiment) => {
-    const response = await restoreExperiment(experiment.id);
-
-    if (!response.errorCode) {
+    try {
+      await restoreExperiment(experiment.id);
       alertify.success("Experiment restored successfully");
       onExperimentRestored();
+    } catch (error) {
+      alertify.error(errorMessage(error, "Error when trying to restore the experiment"));
     }
   };
 
@@ -198,6 +214,18 @@ export default function ExperimentsContainerComponent({
         isLoading={isLoading}
         onSearchReset={onReset}
         onSubmit={onSubmit}
+      />
+      <ListFilters
+        onApply={(filters: ListFilterValues) =>
+          loadExperiments(
+            Object.assign(new ExperimentFilter(), {
+              name: experimentsFilter?.name,
+              projectId: projectId || undefined,
+              pageNumber: 1,
+              ...filters,
+            })
+          )
+        }
       />
 
       {isLoading && (

@@ -7,7 +7,6 @@ type ModelCheckboxProps = {
 };
 
 export default function ModelCheckbox({ model, selected, onToggle }: ModelCheckboxProps) {
-    console.log("Model : ", model);
     return (
         <div className="form-check ms-4 d-flex align-items-center">
             <input

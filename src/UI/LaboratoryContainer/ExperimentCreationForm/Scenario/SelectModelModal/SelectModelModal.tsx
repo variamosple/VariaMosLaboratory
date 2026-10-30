@@ -14,11 +14,12 @@ import CancelButton from "../../../../Buttons/CancelButton/CancelButton";
 type SelectModelModalProps = {
     show: boolean;
     onClose: () => void;
-    setSelectedModel: (model: Model) => void;
-    selectedModel: Model | null;
+    setSelectedModels: (models: Model[]) => void;
+    selectedModels: Model[];
 };
 
-export default function SelectModelModal({ show, onClose, setSelectedModel, selectedModel }: SelectModelModalProps) {
+/** LAB-CF-01: a scenario takes one or more input models. */
+export default function SelectModelModal({ show, onClose, setSelectedModels, selectedModels }: SelectModelModalProps) {
     const { user } = useSession();
     const projectService = useMemo(() => new ProjectPersistenceService(), []);
 
@@ -30,7 +31,7 @@ export default function SelectModelModal({ show, onClose, setSelectedModel, sele
     const [sharedProjects, setSharedProjects] = useState<ProjectInformation[]>([]);
     const [publicProjects, setPublicProjects] = useState<ProjectInformation[]>([]);
     const [loadedProjects, setLoadedProjects] = useState<Record<string, Project>>({});
-    const [selectedModelState, setSelectedModelState] = useState<Model | null>(null);
+    const [selectedModelsState, setSelectedModelsState] = useState<Model[]>([]);
     const [hasLoadedProjects, setHasLoadedProjects] = useState(false);
 
     useEffect(() => {
@@ -38,8 +39,10 @@ export default function SelectModelModal({ show, onClose, setSelectedModel, sele
     }, [user]);
 
     useEffect(() => {
-        setSelectedModelState(selectedModel);
-    }, [selectedModel]);
+        if (show) setSelectedModelsState(selectedModels);
+        // Reset only when the modal opens, not on every render of the parent
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [show]);
     
 
     const loadProjects = useCallback(async (projects: ProjectInformation[], setter: React.Dispatch<React.SetStateAction<ProjectInformation[]>> ) => {
@@ -132,7 +135,11 @@ export default function SelectModelModal({ show, onClose, setSelectedModel, sele
     };
 
     const toggleModel = (model: Model, checked: boolean ) => {
-        setSelectedModelState((prev) => checked ? model : null);
+        setSelectedModelsState((prev) =>
+            checked
+                ? [...prev.filter((m) => m.id !== model.id), model]
+                : prev.filter((m) => m.id !== model.id)
+        );
     };
 
     const filterProjects = ( projects: ProjectInformation[]) =>
@@ -190,7 +197,7 @@ export default function SelectModelModal({ show, onClose, setSelectedModel, sele
                         projects={ filteredProjects }
                         loadedProjects={ loadedProjects }
                         onExpandProject={ handleExpandProject }
-                        selectedModel={ selectedModelState }
+                        selectedModelIds={ selectedModelsState.map((m) => m.id) }
                         onToggleModel={ toggleModel }
                     />
                 )}
@@ -200,21 +207,18 @@ export default function SelectModelModal({ show, onClose, setSelectedModel, sele
                 <Button
                     variant="primary"
                     onClick={() => {
-                        setSelectedModel(selectedModelState);
+                        setSelectedModels(selectedModelsState);
                         onClose();
                     }}
-                    disabled={selectedModelState === null}
+                    disabled={selectedModelsState.length === 0}
                 >
-                    Apply {selectedModelState && `(${selectedModelState.name})`}
+                    Apply {selectedModelsState.length > 0 && `(${selectedModelsState.length})`}
                 </Button>
-                <CancelButton onClick={() => {onClose(); setSelectedModelState(selectedModel);}}/>
-                <Button 
-                    variant="danger" 
-                    onClick={() => {
-                            setSelectedModelState(null); 
-                            setSelectedModel(null);
-                        }} 
-                    disabled={selectedModelState === null}
+                <CancelButton onClick={() => {onClose(); setSelectedModelsState(selectedModels);}}/>
+                <Button
+                    variant="danger"
+                    onClick={() => setSelectedModelsState([])}
+                    disabled={selectedModelsState.length === 0}
                 >
                     Clear
                 </Button>
