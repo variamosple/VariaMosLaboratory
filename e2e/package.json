@@ -1,0 +1,11 @@
+{
+  "name": "variamos-laboratory-e2e",
+  "private": true,
+  "description": "End-to-end tests: the Laboratory interface in a browser against the real Laboratory backend and a PostgreSQL database.",
+  "scripts": {
+    "test": "./run.sh"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0"
+  }
+}
