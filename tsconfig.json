@@ -23,7 +23,9 @@
     "paths": {
       "react": ["./node_modules/@types/react"],
       "@components/*": ["./src/core/components/*"],
-      "@ui/*": ["./src/UI/*"]
+      "@ui/*": ["./src/UI/*"],
+      "@domain/*": ["./src/Domain/*"],
+      "@services/*": ["./src/DataProvider/Services/*"]
     }
   },
   "include": ["src"]

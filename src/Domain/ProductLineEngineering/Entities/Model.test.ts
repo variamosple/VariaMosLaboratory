@@ -8,7 +8,7 @@ test('The constructor should give the right values', () => {
   let elements: Element[] = []
   let relationships: Relationship[] = []
  
-  let model = new Model('Model Id','Model Name','Type','LanguageId','Description','Author','Source',elements, relationships, "Type Engineering")
+  let model = new Model('test_id','test_name','test_type','test_language_id','Description','Author','Source',elements, relationships, "test_type_engineering")
 
 
   expect(model.id).toBe('test_id');

@@ -1,0 +1,88 @@
+/* Fits the 980px list of a usual window; narrower windows scroll the table */
+.experiments-table {
+  min-width: 900px;
+}
+
+.experiments-table th,
+.experiments-table td {
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.status-column {
+  width: 8%;
+}
+
+.name-column {
+  width: 15%;
+}
+
+.description-column {
+  width: 22%;
+}
+
+.hypothesis-column {
+  width: 22%;
+}
+
+.labels-column {
+  width: 13%;
+}
+
+.owner-column {
+  width: 10%;
+}
+
+/* Five 36px buttons, their gaps and the cell padding: below this the last one is cut off */
+.actions-column {
+  width: 220px;
+  min-width: 220px;
+}
+
+.clamped-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.actions-container {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.actions-container .btn {
+  width: 36px;
+  height: 36px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 36px;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.actions-container .btn svg {
+  width: 50%;
+  height: 50%;
+}
+
+.selected-row {
+  background-color: #dbeafe;
+  border: 2px solid #2563eb !important;
+}
+
+.selected-row:hover {
+  background-color: #bfdbfe;
+}

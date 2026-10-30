@@ -1,0 +1,7 @@
+.custom-modal-height .modal-content {
+    height: 85vh;
+}
+
+.custom-modal-height .modal-body {
+    overflow-y: auto;
+}

@@ -11,8 +11,7 @@ export const Config = {
     urlBackEndLaboratory: process.env.REACT_APP_URLBACKENDLABORATORY,
     urlVariamosDocumentation: process.env.REACT_APP_URLVARIAMOSDOCUMENTATION,
     urlVariamosLanguages: process.env.REACT_APP_URLVARIAMOSLANGUAGES,
-    urlVariamosLangDocumentation:
-      process.env.REACT_APP_URLVARIAMOSLANGDOCUMENTATION,
+    urlVariamosLangDocumentation: process.env.REACT_APP_URLVARIAMOSLANGDOCUMENTATION,
   },
   LOGIN_URL: process.env.REACT_APP_VARIAMOS_LOGIN_URL || "",
 };

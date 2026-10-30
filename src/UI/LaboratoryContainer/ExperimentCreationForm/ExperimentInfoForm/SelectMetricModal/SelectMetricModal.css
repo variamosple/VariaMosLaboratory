@@ -1,0 +1,14 @@
+.metric-list {
+    padding: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: left;
+}
+.custom-modal-height .modal-content {
+    height: 85vh;
+}
+
+.custom-modal-height .modal-body {
+    overflow-y: auto;
+}

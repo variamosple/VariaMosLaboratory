@@ -142,3 +142,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# The production build is made by the Dockerfile, not kept in the repository
+/build

@@ -1,0 +1,48 @@
+/* Results, comparison and charts (P3). Chart styles come from the simulated interface of the roadmap v0.3. */
+.lab-results {
+  --lab-surface: #ffffff;
+  --lab-border: rgba(11, 11, 11, 0.1);
+  --lab-border-strong: #c3c2b7;
+  --lab-text: #1d1d1b;
+  --lab-text-secondary: #52514e;
+  --lab-text-muted: #6f6e69;
+  --lab-primary-strong: var(--primary-color-constrast, #0f436d);
+  --lab-series-1: var(--primary-color, #428dcf);
+  --lab-grid: #e1e0d9;
+}
+
+.lab-empty { padding: 24px 16px; color: var(--lab-text-secondary); text-align: center; }
+.lab-code { display: inline-block; padding: 0 6px; border-radius: 4px; background: #eef0f3; color: var(--lab-text-secondary); font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.75rem; font-weight: 500; }
+.lab-chart-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px 32px; }
+.lab-chart { margin: 0; position: relative; }
+.lab-chart figcaption { display: flex; flex-direction: column; margin-bottom: 8px; }
+.lab-chart-title { font-weight: 600; }
+.lab-chart-meta { font-size: 0.75rem; color: var(--lab-text-muted); }
+
+.lab-bars { display: flex; flex-direction: column; }
+.lab-bar-row { position: relative; display: grid; grid-template-columns: minmax(80px, 34%) 1fr; align-items: stretch; column-gap: 8px; }
+.lab-bar-row.is-hovered .lab-bar-label { color: var(--lab-text); }
+.lab-bar-row.is-hovered .lab-bar { background: var(--lab-primary-strong); }
+.lab-bar-label { align-self: center; font-size: 0.8rem; color: var(--lab-text-secondary); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lab-bar-track { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 0; border-left: 1px solid var(--lab-border-strong); }
+.lab-bar { display: block; height: 14px; max-width: calc(100% - 90px); background: var(--lab-series-1); border-radius: 0 4px 4px 0; flex: 0 0 auto; }
+.lab-bar-value { font-size: 0.8rem; font-variant-numeric: tabular-nums; color: var(--lab-text); white-space: nowrap; }
+
+.lab-tooltip { position: absolute; z-index: 5; left: 40%; bottom: calc(100% + 4px); display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; background: var(--lab-surface); border: 1px solid var(--lab-border); border-radius: 6px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12); font-size: 0.8rem; white-space: nowrap; pointer-events: none; }
+.lab-line-tooltip, .lab-point-tooltip { bottom: auto; }
+
+.lab-line-chart svg, .lab-scatter svg { display: block; overflow: visible; }
+.lab-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; list-style: none; padding: 0; margin: 0 0 8px; font-size: 0.8rem; color: var(--lab-text-secondary); }
+.lab-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.lab-legend-swatch { display: inline-block; width: 14px; height: 3px; border-radius: 2px; flex: 0 0 auto; }
+.lab-grid-line { stroke: var(--lab-grid); stroke-width: 1; }
+.lab-axis-label { fill: #6f6e69; font-size: 11px; font-variant-numeric: tabular-nums; }
+.lab-axis-title { fill: #52514e; font-size: 11px; font-weight: 600; }
+.lab-crosshair { stroke: var(--lab-border-strong); stroke-width: 1; stroke-dasharray: 3 3; }
+.lab-marker { stroke: var(--lab-surface); stroke-width: 2; }
+
+/* Heatmap: one row per metric, colour scaled within the row */
+.lab-heatmap { border-collapse: separate; border-spacing: 2px; font-size: 0.8rem; }
+.lab-heatmap th { font-weight: 600; color: var(--lab-text-secondary); padding: 4px 6px; white-space: nowrap; }
+.lab-heatmap td { position: relative; min-width: 72px; padding: 6px; text-align: center; border-radius: 4px; font-variant-numeric: tabular-nums; }
+.lab-heatmap td.is-empty { background: repeating-linear-gradient(45deg, #f4f4f2, #f4f4f2 4px, #ebebe7 4px, #ebebe7 8px); color: var(--lab-text-muted); }

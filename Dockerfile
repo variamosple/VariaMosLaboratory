@@ -1,21 +1,17 @@
-FROM node:16-alpine as build
+# Same base as VariaMosAdmin and variamos_ms_laboratory; Node 16 is end of life
+FROM node:24-alpine AS build
 
 # Set the working directory in the container
 WORKDIR /app
 
-# update packages
-RUN apk update
-
-# copy configs to /app folder
-COPY package*.json ./
-COPY tsconfig.json ./
-
+# Dependencies first: a change of the source code reuses this layer
+COPY package.json package-lock.json ./
 RUN npm ci
 
-# copy source code to /app folder
-COPY ./ . 
-COPY .env ./ 
-# compile
+# Source code, with the .env file written by the deployment workflow: the
+# addresses of the services are built into the interface (see .env.example)
+COPY ./ .
+RUN test -f .env || (echo "Write .env before building the image (see .env.example)" && exit 1)
 RUN npm run build
 
 
