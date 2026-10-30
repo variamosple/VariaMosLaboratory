@@ -1,7 +1,7 @@
-import axios, { AxiosRequestConfig } from "axios";
+import axios, { InternalAxiosRequestConfig } from "axios";
 import { Config } from "../Config";
 
-const authInterceptor = (config: AxiosRequestConfig) => {
+const authInterceptor = (config: InternalAxiosRequestConfig) => {
  const token = localStorage.getItem("authToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

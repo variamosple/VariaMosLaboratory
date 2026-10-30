@@ -19,7 +19,7 @@
   "dependencies": {
     "@variamosple/variamos-components": "^0.0.23",
     "alertifyjs": "^1.13.1",
-    "axios": "^0.21.1",
+    "axios": "^1.21.0",
     "buffer": "^6.0.3",
     "date-fns": "^4.4.0",
     "gapi-script": "^1.2.0",
