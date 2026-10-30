@@ -14,6 +14,13 @@ import ArchivedExperimentsContainer from "./ExperimentListContainer/ArchivedExpe
 import ExperimentContainer from "./ExperimentContainer/ExperimentContainer";
 import { ExperimentFilter } from "../../Domain/Laboratory/Entities/ExperimentFilter";
 import { getGroupExperiments, getSharedExperiments, getUserExperiments, getArchivedExperiments, getExperimentDetailed } from "../../DataProvider/Services/experimentService";
+import { getUserProjects, ProjectSummary } from "../../DataProvider/Services/userProjectsService";
+import ProjectSelect from "../ProjectSelect/ProjectSelect";
+import ReproduceModal from "./ReproduceModal";
+import { useParams } from "react-router-dom";
+import * as alertify from "alertifyjs";
+import { resolveRun } from "../../DataProvider/Services/runService";
+import { errorMessage } from "../errorMessage";
 
 export default function LaboratoryContainer() {
   const [experiment, setExperiment] = useState<Experiment | null>(null);
@@ -25,7 +32,30 @@ export default function LaboratoryContainer() {
   const [isEditingExperiment, setEditingExperiment] = useState(false);
   const [experimentDetailed, setExperimentDetailed] = useState<ExperimentDetailed | null>(null);
   const [activeTab, setActiveTab] = useState("userExperiments");
+  // LAB-EX-01: the lists show the experiments of one project, or of all projects
+  const [projects, setProjects] = useState<ProjectSummary[]>([]);
+  const [projectId, setProjectId] = useState("");
+  const [isReproducing, setReproducing] = useState(false);
+  // LAB-RP-03: a permanent link #/runs/VLAB-... opens the experiment with that run
+  const { persistentId } = useParams();
+  const [focusRunId, setFocusRunId] = useState<string | null>(null);
   const { user } = useSession();
+
+  useEffect(() => {
+    if (!persistentId) return;
+    resolveRun(persistentId)
+      .then(async (reference) => {
+        setFocusRunId(reference.runId);
+        setExperiment(await getExperimentDetailed(reference.experimentId));
+      })
+      .catch((error) => alertify.error(errorMessage(error, `No run you can read has the identifier ${persistentId}.`)));
+  }, [persistentId]);
+
+  useEffect(() => {
+    getUserProjects()
+      .then(setProjects)
+      .catch(() => setProjects([]));
+  }, []);
 
   useEffect(() => {
     const isGuest = user.roles.find((role) => role.toLowerCase() === "guest");
@@ -120,6 +150,7 @@ export default function LaboratoryContainer() {
         <Layout>
             <ExperimentCreationContainer
                 mode="edit"
+                projects={projects}
                 initialExperiment={experimentDetailed}
                 onSuccess={handleClick}
                 onCancel={() => {
@@ -136,6 +167,8 @@ export default function LaboratoryContainer() {
       <Layout>
         <ExperimentCreationContainer
           mode="create"
+          projects={projects}
+          defaultProjectId={projectId}
           onSuccess={handleClick}
           onCancel={() => setCreatingExperiment(false)}
         />
@@ -153,12 +186,14 @@ export default function LaboratoryContainer() {
 
   if (experiment) {
   let mode: "allowed" | "restricted" = "allowed";
-  if (experiment.userRole === "viewer") {
+  // LAB-COL-01: read only when the user may neither write nor execute
+  const access = experiment.permissions;
+  if (access ? !access.write && !access.execute : experiment.userRole === "viewer") {
     mode = "restricted";
   }
     return (
       <Layout>
-        <ExperimentContainer experiment={experiment} setExperiment={setExperiment} mode={mode} />
+        <ExperimentContainer experiment={experiment} setExperiment={setExperiment} mode={mode} focusRunId={focusRunId} />
       </Layout>
     );
   }
@@ -168,10 +203,17 @@ export default function LaboratoryContainer() {
         <div className="experimentlist-container">
           <div className="header-button-container">
             <CreateExperimentButton onClick={handleCreateClick} />
+            <Button variant="outline-primary" onClick={() => setReproducing(true)}>
+              Reproduce from a package
+            </Button>
             <Button variant = "primary" onClick={() => setSeeArchived(!seeArchived)}>
               <Archive className="me-2" />
               Archived
             </Button>
+          </div>
+          <div className="d-flex align-items-center gap-2 mb-3" style={{ maxWidth: 480 }}>
+            <label htmlFor="project-filter" className="form-label mb-0 text-nowrap">Project</label>
+            <ProjectSelect id="project-filter" projects={projects} value={projectId} onChange={setProjectId} allowAll />
           </div>
           <Tabs
               activeKey={activeTab}
@@ -193,6 +235,7 @@ export default function LaboratoryContainer() {
               <UserExperimentsContainer 
                 onExperimentClick={handleClick} 
                 mode="user"
+                projectId={projectId}
                 queryData={userQueryData} 
                 onExperimentEdit={onExperimentEdit}
               />
@@ -208,6 +251,7 @@ export default function LaboratoryContainer() {
                   loadDataOnInit={loadSharedExperiments}
                   onExperimentClick={handleClick}
                   mode="shared"
+                  projectId={projectId}
                   queryData={sharedQueryData}
                   onExperimentEdit={onExperimentEdit}
               />
@@ -223,12 +267,28 @@ export default function LaboratoryContainer() {
                   loadDataOnInit={loadSharedExperiments}
                   onExperimentClick={handleClick}
                   mode="group"
+                  projectId={projectId}
                   queryData={groupQueryData}
                   onExperimentEdit={onExperimentEdit}
               />
             </Tab>
         </Tabs>
         </div>
+
+      {isReproducing && (
+        <ReproduceModal
+          show={isReproducing}
+          projects={projects}
+          defaultProjectId={projectId}
+          onClose={() => setReproducing(false)}
+          onReproduced={(reproduced, metricsLeftOut) => {
+            setReproducing(false);
+            alertify.success("Experiment rebuilt from the package: it is Ready to run.");
+            if (metricsLeftOut.length) alertify.warning(`Metrics left out (private metrics of another user): ${metricsLeftOut.join(", ")}`);
+            setExperiment(reproduced);
+          }}
+        />
+      )}
 
       {seeArchived && (
         <Modal show={seeArchived} onHide={() => setSeeArchived(false)} size="xl" centered>
@@ -239,6 +299,7 @@ export default function LaboratoryContainer() {
             <ArchivedExperimentsContainer 
               onExperimentClick={() => {}} 
               mode="archived" 
+              projectId={projectId}
               experimentSelected={selectedArchivedExperiment} 
               onExperimentSelect={onArchivedExperimentSelect}   
               onExperimentRestored={handleExperimentRestored}

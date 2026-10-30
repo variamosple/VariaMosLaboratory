@@ -51,10 +51,13 @@ export default function ExperimentHeader({
 
                 {(mode === "allowed") && (
                 <>
+                    {/* LAB-VIS-01 */}
                     <Button
                         variant="outline-primary"
                         className="ms-2"
                         onClick={onDashboard}
+                        disabled={!onDashboard}
+                        title={onDashboard ? undefined : "Available with results (P3)"}
                     >
                         <GraphUp className="me-2" />
                         Dashboard

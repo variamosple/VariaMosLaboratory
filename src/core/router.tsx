@@ -16,6 +16,15 @@ export const ROUTES: RouteObject[] = [
           </AuthWrapper>
         ),
       },
+      {
+        // LAB-RP-03: permanent link of a run
+        path: "runs/:persistentId",
+        element: (
+          <AuthWrapper redirectPath={Config.LOGIN_URL}>
+            <LaboratoryContainer />
+          </AuthWrapper>
+        ),
+      },
     ],
   },
   {
