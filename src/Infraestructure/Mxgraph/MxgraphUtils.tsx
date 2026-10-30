@@ -71,7 +71,7 @@ export default class MxgraphUtils {
         //imageExport.visitStatesRecursive(graph.getView().getState(graph.model.root), svgCanvas);
         let svgString = mx.mxUtils.getXml(svgCanvas.root as any);
 
-        // Asegurarse de que el SVG tenga las dimensiones correctas
+        // Make sure the SVG has the right dimensions
         const graphBounds = graph.getGraphBounds();
         const parser = new DOMParser();
         const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
@@ -152,13 +152,13 @@ export default class MxgraphUtils {
 
     static exportFile4(graph: mxGraph, format: string) {
         try {
-            // Crear el SVG
+            // Create the SVG
             const imageExport = new mx.mxImageExport();
             const svgCanvas = new mx.mxSvgCanvas2D(mx.mxUtils.createXmlDocument().createElement('svg'));
             imageExport.drawState(graph.getView().getState(graph.model.root), svgCanvas);
             let svgString = mx.mxUtils.getXml(svgCanvas.root as any);
 
-            // Asegurarse de que el SVG tenga las dimensiones correctas
+            // Make sure the SVG has the right dimensions
             const graphBounds = graph.getGraphBounds();
             const parser = new DOMParser();
             const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
@@ -170,18 +170,18 @@ export default class MxgraphUtils {
             // Convertir el documento SVG de vuelta a string
             svgString = new XMLSerializer().serializeToString(svgDoc);
 
-            // Crear un Blob con el contenido SVG
+            // Create a Blob with the SVG content
             const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
 
-            // Crear una URL para el Blob
+            // Create a URL for the Blob
             const svgUrl = URL.createObjectURL(svgBlob);
 
-            // Crear un elemento <a> para descargar el archivo
+            // Create an <a> element to download the file
             const downloadLink = document.createElement('a');
             downloadLink.href = svgUrl;
             downloadLink.download = "imagen.svg";
 
-            // Añadir el enlace al documento y hacer clic en él
+            // Add the link to the document and click it
             document.body.appendChild(downloadLink);
             downloadLink.click();
 
@@ -189,7 +189,7 @@ export default class MxgraphUtils {
             document.body.removeChild(downloadLink);
             URL.revokeObjectURL(svgUrl);
 
-            console.log('SVG descargado con éxito');
+            console.log('SVG downloaded');
         } catch (error) {
             console.error('Error al descargar el SVG:', error);
         }

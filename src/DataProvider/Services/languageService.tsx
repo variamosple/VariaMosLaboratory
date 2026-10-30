@@ -33,10 +33,6 @@ export function getLanguagesDetail(): Promise<Language[]> {
 }
 export function getLanguagesByUser(userId: string): Promise<Language[]> { 
   let url = "/languagesbyuser/" + userId;
-  
-  // 🟢 LOGS D'INSPECTION AVANT ENVOI
-  console.log("🔍 [Service] URL finale générée :", url);
-  console.log("🔍 [Service] Axios Client Config (Headers) :", LANGUAGES_CLIENT.defaults.headers);
 
   return LANGUAGES_CLIENT.get(url).then((res) => {
     let responseAPISuccess: ResponseAPISuccess = new ResponseAPISuccess();
@@ -48,14 +44,7 @@ export function getLanguagesByUser(userId: string): Promise<Language[]> {
 
     let languages: Language[] = [];
     languages = Object.assign(languages, responseAPISuccess.data);
-    return languages; 
-  }).catch((error) => {
-    // 🟢 LOGS D'INSPECTION DE L'ERREUR 400
-    if (error.response) {
-      console.error("🔴 [Service API 400] Le serveur a répondu :", error.response.data);
-      console.error("🔴 [Service API 400] Headers envoyés :", error.config.headers);
-    }
-    throw error;
+    return languages;
   });
 }
 

@@ -217,7 +217,7 @@ export default function MxGEditor({ model }: Props) {
               e21.geometry.height += 2;
 
               offx = 0;
-              e21.geometry.offset = new mx.mxPoint(offx, offy); //offsetx aqui no funciona correctamente cuando la dirección se invierte
+              e21.geometry.offset = new mx.mxPoint(offx, offy); //offsetx does not work correctly here when the direction is reversed
             }
           }
         }
@@ -504,7 +504,7 @@ export default function MxGEditor({ model }: Props) {
 
           if (model && graphRef.current) {
             const modelKey = `${model.type}_${model.id}`;
-            // Actualizar snapshot específico para este modelo
+            // Update the snapshot of this model
             modelSnapshots.current.set(modelKey, {
               elements: JSON.parse(JSON.stringify(model.elements || [])),
               relationships: JSON.parse(JSON.stringify(model.relationships || []))

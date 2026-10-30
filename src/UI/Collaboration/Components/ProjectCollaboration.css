@@ -35,7 +35,7 @@
   border-color: #6c757d;
 }
 
-/* Estilos para el modal de colaboradores */
+/* Styles of the collaborators modal */
 .collaborators-list {
   max-height: 400px;
   overflow-y: auto;
@@ -61,7 +61,7 @@
   font-size: 12px;
 }
 
-/* Espaciado para botones en el modal */
+/* Spacing of the buttons in the modal */
 .ms-2 {
   margin-left: 0.5rem !important;
 }
@@ -116,7 +116,7 @@
   }
 }
 
-/* Para pantallas muy pequeñas */
+/* For very small screens */
 @media (max-width: 480px) {
   .collaboration-button {
     font-size: 9px;
