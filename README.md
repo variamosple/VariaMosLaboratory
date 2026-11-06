@@ -6,6 +6,17 @@ dashboard, results (comparison, charts, export, solver benchmark) and reproducib
 links, runs side by side). It talks to the Laboratory backend (`variamos_ms_laboratory`), to the Administration
 module for the session, and to vms_projects for projects and models.
 
+## Deployment
+
+Each merge on `main` builds `jasotov/variamoslaboratory:main` and recreates the service on the production server
+(`.github/workflows/variamoslaboratory-main-aws-image.yml`). The workflow writes the addresses of the services to
+`.env` before the build: those of the platform from the organization variables the other interfaces use
+(`REACT_APP_ADMIN_API_URL`, `REACT_APP_LOGIN_URL`, `REACT_APP_PROJECTS_API_URL`, `REACT_APP_LANGUAGES_API_URL`),
+and two variables of this repository: `REACT_APP_URLBACKENDLABORATORY` (the Laboratory backend,
+`https://app.variamos.com/variamos_ms_laboratory`) and `REACT_APP_URLBACKENDRESTRICTION` (the restriction service,
+the same address as in VariaMosPLE). The run stops before the build when one of them has no value.
+The checklist, with the backend, is `DEPLOYMENT.md` in `variamos_ms_laboratory`.
+
 ## Tests
 
 ```bash
