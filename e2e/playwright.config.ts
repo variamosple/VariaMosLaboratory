@@ -38,6 +38,8 @@ export default defineConfig({
         DB_SCHEMA: env.DB.schema,
         // The test database has no TLS
         DB_SSL: "false",
+        // The interface of the tests is served from its own port: the backend accepts its credentials
+        LAB_CORS_ORIGINS: `http://127.0.0.1:${env.FRONT_PORT}`,
         VARIAMOS_PUBLIC_KEY_PATH: path.join(env.KEY_DIR, "public.pem"),
         VARIAMOS_PRIVATE_KEY_PATH: path.join(env.KEY_DIR, "private.pem"),
         // P2 runs on the mock Reasoning gateway: each solver job takes 3 s

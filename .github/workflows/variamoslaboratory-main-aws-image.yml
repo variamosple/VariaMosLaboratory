@@ -1,0 +1,113 @@
+name: variamoslaboratory-main-aws-image
+
+# Same steps as the other interfaces of the platform: write .env, build and push
+# jasotov/variamoslaboratory:main, then pull it and recreate the service on the production server
+# (DEPLOYMENT.md of variamos_ms_laboratory, section 3).
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Record the build start
+        run: echo "BUILD_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{vars.ACR_DOKCERHUB}}
+          username: ${{secrets.ACRUSERNAME_DOKCERHUB}}
+          password: ${{secrets.ACRUSERPASSWORD_DOKCERHUB}}
+
+      # The addresses of the services are built into the interface (src/Config.ts). They are public, so
+      # GitHub variables: those of the platform are the organization variables the other interfaces use,
+      # the last two are variables of this repository. A missing one stops the run before the build.
+      - name: Write the .env file of the build
+        env:
+          REACT_APP_VARIAMOS_ADMIN_API_URL: ${{ vars.REACT_APP_ADMIN_API_URL }}
+          REACT_APP_VARIAMOS_LOGIN_URL: ${{ vars.REACT_APP_LOGIN_URL }}
+          REACT_APP_URLVMSPROJECTS: ${{ vars.REACT_APP_PROJECTS_API_URL }}
+          REACT_APP_URLBACKENDLANGUAGE: ${{ vars.REACT_APP_LANGUAGES_API_URL }}
+          REACT_APP_URLBACKENDLABORATORY: ${{ vars.REACT_APP_URLBACKENDLABORATORY }}
+          REACT_APP_URLBACKENDRESTRICTION: ${{ vars.REACT_APP_URLBACKENDRESTRICTION }}
+        run: |
+          names="REACT_APP_VARIAMOS_ADMIN_API_URL REACT_APP_VARIAMOS_LOGIN_URL REACT_APP_URLVMSPROJECTS REACT_APP_URLBACKENDLANGUAGE REACT_APP_URLBACKENDLABORATORY REACT_APP_URLBACKENDRESTRICTION"
+          missing=""
+          for name in $names; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::GitHub variables without a value:$missing (DEPLOYMENT.md of variamos_ms_laboratory, section 3)"
+            exit 1
+          fi
+          {
+            echo "REACT_APP_NODE_ENV=production"
+            # Quoted: the login address holds a "#", a comment for the newer versions of dotenv
+            for name in $names; do
+              echo "$name=\"${!name}\""
+            done
+          } > .env
+
+      - name: Build and push container image to registry
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: ${{vars.ACR_DOKCERHUB}}/${{secrets.ACRUSERNAME_DOKCERHUB}}/variamoslaboratory:main
+          file: ./Dockerfile
+
+      - name: Deploy changes into the server
+        uses: appleboy/ssh-action@c4f70287fc37c43b14b30b407224bbbc8e8c6327 # master of 2026-08-16: v1.2.5 plus the drone-ssh checksum check
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USERNAME }}
+          key: ${{ secrets.VARIAMOS_AWS_PEM }}
+          script: |
+            docker compose --env-file .env.aws.develop -f docker-compose-aws-develop-nginx.yml pull variamoslaboratoryaws
+            docker compose --env-file .env.aws.develop -f docker-compose-aws-develop-nginx.yml up -d --force-recreate variamoslaboratoryaws
+
+      # Alert only, as for the other interfaces: a red run on main warns whoever merged; nothing is
+      # rolled back. The page must come from this run's build (nginx gives the build time as
+      # Last-Modified) and its main script must load.
+      - name: Check the deployed page answers
+        env:
+          SITE_URL: https://app.variamos.com
+          PAGE_URL: https://app.variamos.com/variamos_laboratory/
+        run: |
+          deadline=$(( $(date +%s) + 300 ))
+          while :; do
+            problem=""
+            headers=$(curl -sS --max-time 10 -o page.html -D - "$PAGE_URL" || true)
+            modified=$(echo "$headers" | tr -d '\r' | sed -n 's/^[Ll]ast-[Mm]odified: //p')
+            script=$(grep -oE '/variamos_laboratory/static/js/main\.[A-Za-z0-9]+\.js' page.html 2>/dev/null | head -1)
+            if ! echo "$headers" | head -1 | grep -q " 200"; then
+              problem="the page does not answer 200"
+            elif [ -z "$modified" ] || [ "$(date -d "$modified" +%s)" -lt "$BUILD_STARTED_AT" ]; then
+              problem="the page is not the one built by this run (Last-Modified: ${modified:-none})"
+            elif [ -z "$script" ] || ! curl -sf --max-time 10 -o /dev/null "$SITE_URL$script"; then
+              problem="its main script does not load (${script:-not found})"
+            fi
+            if [ -z "$problem" ]; then
+              echo "The page built by this run answers (Last-Modified: $modified, $script)"
+              exit 0
+            fi
+            if [ "$(date +%s)" -ge "$deadline" ]; then
+              echo "::error::Within 5 minutes, $problem"
+              exit 1
+            fi
+            sleep 10
+          done
