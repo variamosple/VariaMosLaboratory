@@ -17,6 +17,9 @@ import { errorMessage } from "../../errorMessage";
 import { Metric } from "@domain/Laboratory/Entities/Metric";
 import { ExperimentRoleEnum } from "../../../Domain/Laboratory/Entities/Collaborator";
 import { getUserProjects, ProjectSummary } from "../../../DataProvider/Services/userProjectsService";
+import { getSolvers } from "../../../DataProvider/Services/catalogService";
+import { applyTemplate, TemplateOrigin } from "../../../Domain/Laboratory/applyTemplate";
+import { useSession } from "@variamosple/variamos-components";
 
 type ExperimentCreationFormProps = {
     mode: "create" | "edit";
@@ -44,6 +47,12 @@ export default function ExperimentCreationForm({ mode, initialExperiment, projec
     const [loadedProjects, setLoadedProjects] = useState<ProjectSummary[]>([]);
     // LAB-COL-02: the save was refused, someone saved in between
     const [conflict, setConflict] = useState<{ message: string; details: string[]; experiment: ExperimentDetailed } | null>(null);
+    // LAB-CF-05: the template applied to this form, sent with the creation, and what the user still has to do
+    const [templateOrigin, setTemplateOrigin] = useState<TemplateOrigin | null>(null);
+    const [templateNotes, setTemplateNotes] = useState<string[]>([]);
+    // The scenario tabs start again on the first scenario of an applied template
+    const [scenarioFormKey, setScenarioFormKey] = useState(0);
+    const { user } = useSession();
 
     useEffect(() => {
         if (projects) return;
@@ -51,6 +60,29 @@ export default function ExperimentCreationForm({ mode, initialExperiment, projec
             .then(setLoadedProjects)
             .catch(() => setLoadedProjects([]));
     }, [projects]);
+
+    /** LAB-CF-05: fills the form with the base configuration of the template; nothing is saved yet. */
+    const handleTemplateSelected = async (template: Experiment) => {
+        try {
+            const [detailed, catalog] = await Promise.all([getExperimentDetailed(template.id), getSolvers()]);
+            const applied = applyTemplate(detailed, { projectId, userId: user?.id, catalog, newId: () => crypto.randomUUID() });
+            setExperimentName(applied.name);
+            setNameError(false);
+            setExperimentDescription(applied.description);
+            setExperimentHypothesis(applied.hypothesis);
+            setLabels(applied.labels);
+            setMetrics(applied.metrics);
+            setScenarios(applied.scenarios);
+            setScenarioFormKey((key) => key + 1);
+            setTemplateOrigin(applied.origin);
+            setTemplateNotes([
+                ...(applied.modelsLeftOut > 0 ? ["Pick the input models of each scenario: the template's models stay in its project."] : []),
+                ...(applied.metricsLeftOut.length > 0 ? [`Left out, private metrics of another user: ${applied.metricsLeftOut.join(", ")}.`] : []),
+            ]);
+        } catch (error) {
+            alertify.error(errorMessage(error, "The template could not be applied."));
+        }
+    };
 
     const handleCreateExperiment = async () => {
         const missingName = !experimentName.trim();
@@ -94,7 +126,9 @@ export default function ExperimentCreationForm({ mode, initialExperiment, projec
             // The server returns the saved experiment: its ids, version and state
             const saved = mode === "edit"
                 ? await updateExperiment(experiment)
-                : await createExperiment(experiment);
+                : await createExperiment(templateOrigin
+                    ? { ...experiment, templateId: templateOrigin.id, templateVersion: templateOrigin.version }
+                    : experiment);
             onSuccess(saved);
         } catch (error: any) {
             if (mode === "edit" && error?.response?.status === 409 && errorDetails(error).length > 0) {
@@ -131,9 +165,18 @@ export default function ExperimentCreationForm({ mode, initialExperiment, projec
                         </Alert>
                     )}
 
-                    <div className="text-center mb-4">
-                        <TemplateButton onClick={() => setIsTemplateImporting(true)} />
-                    </div>
+                    {mode === "create" && (
+                        <div className="text-center mb-4">
+                            <TemplateButton onClick={() => setIsTemplateImporting(true)} />
+                        </div>
+                    )}
+
+                    {templateOrigin && (
+                        <Alert variant="info" role="status">
+                            Configuration of the template <strong>{templateOrigin.name}</strong> applied; the new experiment will record it as its origin.
+                            {templateNotes.map((note) => <div key={note} className="small mt-1">{note}</div>)}
+                        </Alert>
+                    )}
 
                     <ExperimentInfoForm
                         experimentName={experimentName}
@@ -157,7 +200,7 @@ export default function ExperimentCreationForm({ mode, initialExperiment, projec
                         projectError={projectError}
                     />
 
-                    <ScenarioForm scenarios={scenarios} setScenarios={setScenarios} />
+                    <ScenarioForm key={scenarioFormKey} scenarios={scenarios} setScenarios={setScenarios} />
                     
                     <div className="d-flex justify-content-end gap-3">
                         {mode === "edit" ? (
@@ -194,9 +237,7 @@ export default function ExperimentCreationForm({ mode, initialExperiment, projec
             <SelectTemplateModal 
                 show={isTemplateImporting} 
                 onClose={() => setIsTemplateImporting(false)} 
-                onTemplateSelected={(template) => {
-                    // Handle template selection
-                }}
+                onTemplateSelected={handleTemplateSelected}
             />
         )}
     </>
