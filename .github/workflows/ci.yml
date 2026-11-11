@@ -36,7 +36,7 @@ jobs:
       run: npx tsc --noEmit -p .
 
     - name: Tests, with their coverage
-      run: npx react-scripts test --watchAll=false --coverage
+      run: npm test -- --watchAll=false --coverage
       env:
         CI: true
 
@@ -49,6 +49,6 @@ jobs:
 
     # With CI=true, react-scripts would fail the build on lint warnings inherited from the template
     - name: Production build
-      run: npx react-scripts build
+      run: npm run build
       env:
         CI: false
