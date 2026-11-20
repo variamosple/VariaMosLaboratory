@@ -1,0 +1,26 @@
+# Builds, checks and deploys the frontend with the shared workflow of the
+# organization: https://github.com/variamosple/.github
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: variamosple/.github/.github/workflows/deploy.yml@v1
+    with:
+      image: variamoslaboratory
+      service: variamoslaboratoryaws
+      page-url: https://app.variamos.com/variamos_laboratory/
+      # Variables described in DEPLOYMENT.md of variamos_ms_laboratory, section 3
+      build-env: |
+        REACT_APP_NODE_ENV=production
+        REACT_APP_VARIAMOS_ADMIN_API_URL="${{ vars.REACT_APP_ADMIN_API_URL }}"
+        REACT_APP_VARIAMOS_LOGIN_URL="${{ vars.REACT_APP_LOGIN_URL }}"
+        REACT_APP_URLVMSPROJECTS="${{ vars.REACT_APP_PROJECTS_API_URL }}"
+        REACT_APP_URLBACKENDLANGUAGE="${{ vars.REACT_APP_LANGUAGES_API_URL }}"
+        REACT_APP_URLBACKENDLABORATORY="${{ vars.REACT_APP_URLBACKENDLABORATORY }}"
+        REACT_APP_URLBACKENDRESTRICTION="${{ vars.REACT_APP_URLBACKENDRESTRICTION }}"
+    secrets: inherit
