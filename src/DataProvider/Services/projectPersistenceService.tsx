@@ -17,24 +17,24 @@ export type AIChatResult = {
 };
 
 export default class ProjectPersistenceService {
+  // The .catch also gets the errors of the request: a try/catch around a promise does not, and the caller
+  // then waited forever ("Loading projects..." in Select Models)
   getProjectsByUser(user: string, successCallback: any, errorCallback: any) {
-    try {
-      PROJECTS_CLIENT.get("/getProjects").then((res) => {
+    PROJECTS_CLIENT.get("/getProjects")
+      .then((res) => {
         const { owned_projects, shared_projects } = res.data;
         if (!owned_projects && !shared_projects) {
           throw new Error("Invalid server response: Missing owned_projects or shared_projects");
         }
         successCallback({
-          owned_projects: owned_projects,
-          shared_projects: shared_projects
+          owned_projects: owned_projects ?? [],
+          shared_projects: shared_projects ?? []
         });
+      })
+      .catch((error) => {
+        console.error("Something wrong in getProjectsByUser Service: " + error);
+        errorCallback?.(error);
       });
-    } catch (error) {
-      console.log("Something wrong in getProjectsByUser Service: " + error);
-      if (errorCallback) {
-        errorCallback(error);
-      }
-    }
   }
 
   getTemplateProjectsByUser(
@@ -42,8 +42,8 @@ export default class ProjectPersistenceService {
     successCallback: any,
     errorCallback: any
   ) {
-    try {
-      PROJECTS_CLIENT.get("/getTemplateProjects").then((res) => {
+    PROJECTS_CLIENT.get("/getTemplateProjects")
+      .then((res) => {
         let responseAPISuccess: ResponseAPISuccess = new ResponseAPISuccess();
         responseAPISuccess = Object.assign(responseAPISuccess, res.data);
         if (responseAPISuccess.message?.includes("Error")) {
@@ -52,13 +52,13 @@ export default class ProjectPersistenceService {
         let records: ProjectInformation[] = [];
         records = Object.assign(records, responseAPISuccess.data["projects"]);
         successCallback(records);
+      })
+      .catch((error) => {
+        console.error("Something wrong in getTemplateProjectsByUser Service: " + error);
+        errorCallback?.(error);
       });
-    } catch (error) {
-      console.log(
-        "Something wrong in getTemplateProjectsByUser Service: " + error
-      );
-    }
   }
+
 
   saveProject(
     user: string,
@@ -108,16 +108,39 @@ export default class ProjectPersistenceService {
     }
   }
 
+  /**
+   * The lists of Select Models. A list that cannot be loaded comes back empty and is named in `error`, so that
+   * the other lists are still shown.
+   */
+  async getProjectLists(user: string) {
+    const failed: string[] = [];
+    const privateResponse = await new Promise<{ owned_projects: ProjectInformation[]; shared_projects: ProjectInformation[] }>(
+      (resolve, reject) => this.getProjectsByUser(user, resolve, reject)
+    ).catch(() => {
+      failed.push("your projects");
+      return { owned_projects: [], shared_projects: [] };
+    });
+    const publicResponse = await new Promise<ProjectInformation[]>(
+      (resolve, reject) => this.getTemplateProjectsByUser(user, resolve, reject)
+    ).catch((): ProjectInformation[] => {
+      failed.push("the public projects");
+      return [];
+    });
+    const lists = failed.join(" and ");
+    const error = lists && `${lists.charAt(0).toUpperCase()}${lists.slice(1)} could not be loaded. Close this window and open it again to retry.`;
+    return { privateResponse, publicResponse, error };
+  }
+
   openProject(
     user: string,
     projectId: string,
     successCallback: any,
     errorCallback: any
   ): void {
-    try {
-      PROJECTS_CLIENT.get("/getProject", {
-        params: { project_id: projectId },
-      }).then((res) => {
+    PROJECTS_CLIENT.get("/getProject", {
+      params: { project_id: projectId },
+    })
+      .then((res) => {
         let responseAPISuccess: ResponseAPISuccess = new ResponseAPISuccess();
         responseAPISuccess = Object.assign(responseAPISuccess, res.data);
         if (responseAPISuccess.message?.includes("Error")) {
@@ -125,11 +148,13 @@ export default class ProjectPersistenceService {
         }
         let record = responseAPISuccess.data["project"];
         successCallback(record);
+      })
+      .catch((error) => {
+        console.error("Something wrong in openProject Service: " + error);
+        errorCallback?.(error);
       });
-    } catch (error) {
-      console.log("Something wrong in openProject Service: " + error);
-    }
   }
+
 
   addConfiguration(
     user: string,
