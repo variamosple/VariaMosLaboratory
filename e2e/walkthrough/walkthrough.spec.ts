@@ -360,7 +360,8 @@ test("functional walkthrough", async ({ page, secondPage }) => {
     const modal = page.getByRole("dialog");
     await modal.getByRole("cell", { name: new RegExp(`^${esc(NAME)} \\(copy\\)`) }).first().click();
     await modal.getByRole("button", { name: "Apply Template" }).click();
-    await expect(page.getByRole("textbox", { name: "Name of the experiment" })).not.toHaveValue("");
+    await expect(page.getByRole("textbox", { name: "Name of the experiment" })).toHaveValue(`${NAME} (copy)`);
+    await expect(page.getByRole("status").filter({ hasText: "Configuration of the template" })).toBeVisible();
   });
 
   await step(page, "LAB-EX-06", "Archive from the list, find it in Archived, restore it", async () => {
