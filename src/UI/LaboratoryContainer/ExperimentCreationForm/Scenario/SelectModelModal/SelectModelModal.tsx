@@ -33,6 +33,7 @@ export default function SelectModelModal({ show, onClose, setSelectedModels, sel
     const [loadedProjects, setLoadedProjects] = useState<Record<string, Project>>({});
     const [selectedModelsState, setSelectedModelsState] = useState<Model[]>([]);
     const [hasLoadedProjects, setHasLoadedProjects] = useState(false);
+    const [loadError, setLoadError] = useState("");
 
     useEffect(() => {
         setUserId(user?.id || "");
@@ -77,28 +78,18 @@ export default function SelectModelModal({ show, onClose, setSelectedModels, sel
 
         const loadAllProjects = async () => {
             setIsLoadingProjects(true);
+            setLoadError("");
 
             try {
-                const privateResponse =
-                    await new Promise<any>((resolve, reject) =>
-                        projectService.getProjectsByUser(userId, resolve, reject)
-                    );
-
-                const publicResponse =
-                    await new Promise<ProjectInformation[]>(
-                        (resolve, reject) =>
-                            projectService.getTemplateProjectsByUser(
-                                userId,
-                                resolve,
-                                reject
-                            )
-                    );
+                const { privateResponse, publicResponse, error } = await projectService.getProjectLists(userId);
 
                 await loadProjects(privateResponse.owned_projects, setOwnedProjects);
                 await loadProjects(privateResponse.shared_projects, setSharedProjects);
                 await loadProjects(publicResponse, setPublicProjects);
 
-                setHasLoadedProjects(true);
+                // After a failure hasLoadedProjects stays false, so opening the window again tries again
+                setLoadError(error);
+                setHasLoadedProjects(!error);
             } finally {
                 setIsLoadingProjects(false);
             }
@@ -180,6 +171,12 @@ export default function SelectModelModal({ show, onClose, setSelectedModels, sel
                         onChange={(e) => setSearchTerm(e.target.value) }
                     />
                 </div>
+
+                {loadError && (
+                    <Alert variant="warning">
+                        {loadError}
+                    </Alert>
+                )}
 
                 {isLoadingProjects ? (
                     <div className="text-center py-5">
